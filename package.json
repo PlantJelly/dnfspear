@@ -1,20 +1,23 @@
 {
-  "name": "dnfspear",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/PlantJelly/dnfspear.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/PlantJelly/dnfspear/issues"
-  },
-  "homepage": "https://github.com/PlantJelly/dnfspear#readme"
+    "name": "dnfspear",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/PlantJelly/dnfspear.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/PlantJelly/dnfspear/issues"
+    },
+    "homepage": "https://github.com/PlantJelly/dnfspear#readme",
+    "dependencies": {
+        "express": "^5.1.0"
+    }
 }
