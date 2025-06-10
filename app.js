@@ -9,7 +9,7 @@ app.get("/", (req, res) => {
 });
 
 // testController 불러오기
-const testController = require("./src/controllers/testController");
+const testController = require("./src/controllers/testController.js");
 
 // 테스트용 라우트 추가
 app.get("/test", testController);
