@@ -24,24 +24,24 @@ const equipmentInf = {
     태초융합석 : [29952, 395]
 };
 async function test(req, res) {
-    let apiKey = process.env.API_KEY;  //apikey
-    let limit = 50; // 몇개 검색할건지
     let valueToggle = "힘의 정수"; // 힘의 정수로 판단할지, 종말의 계시로 판단할지 토글용
     let itemResult = await auctionAverage(itemIdJson); // 무색큐브조각, 황금큐브조각, 힘의정수1개상자 가격 객체
     let itemApoResult = await apoResult(itemIdApoJson); // 종말의 계시 1개 가격 계산
 
     async function auctionSearch(itemId){ // 경매장 api 검색 함수
+        let apiKey = process.env.API_KEY;  //apikey
+        let limit = 50; // 몇개 검색할건지
         let url = `https://api.neople.co.kr/df/auction-sold?limit=${limit}&itemId=${itemId}&apikey=${apiKey}`;
-        const fetched = await fetch(url);
-        const data = await fetched.json();
+        const fetched = await fetch(url); // api 호출
+        const data = await fetched.json(); // 원하는 값을 객체로 변환
         return data;
     };
 
     async function auctionAverage(itemIdJson){ // 경매장 검색 후 평균값 객체로 저장하기
         let itemResult = {};
         for(const [key, itemId] of Object.entries(itemIdJson)){ // 경매장 펑균 시세 조사해서 itemResult 객체에 넣기
-            let data = await auctionSearch(itemId);
-            let sum = sumAverage(data);
+            let data = await auctionSearch(itemId); // api 호출
+            let sum = sumAverage(data); // 경매장 평균 시세 버림 함수 호출
             itemResult[key] = sum;
         };
         return itemResult;
@@ -49,7 +49,7 @@ async function test(req, res) {
 
     async function apoResult(itemIdApoJson){ // 종말의 계시 1개 가격 계산
         let result = -1;
-        for(const [key, itemId] of Object.entries(itemIdApoJson)){
+        for(const [key, itemId] of Object.entries(itemIdApoJson)){ // 소울결정 하나씩 가격 검색하기
             let data = await auctionSearch(itemId);
             let value = sumAverage(data);
             let cal = -1;
@@ -65,16 +65,16 @@ async function test(req, res) {
                 case "태초소울결정" : cal = value/1000;
                 break;
             }
-            if (result > cal || result == -1){
+            if (result > cal || result == -1){ // 만약 방금 계산한게 저장한 값보다 작으면 교체 혹은 첫값(-1) 이면 교체
                 result = cal;
             }
         };
-        return result;
+        return result; // 최소값 반환
     };
 
     function sumAverage(data) { //경매장 평균 시세 버림 함수
         let sum = 0;
-        for (let i = 0; i < data.rows.length; i++) { // 전부 더하기
+        for (let i = 0; i < data.rows.length; i++) { // 시세 검색 후 전부 더하기(limit 변수값)
             sum += data.rows[i].unitPrice;
         }
         sum = sum / data.rows.length; // 평균내기
@@ -86,19 +86,19 @@ async function test(req, res) {
         let equipmentResult = {};
         for(const [name, value] of Object.entries(equipmentInf)){
             let cal = 0;
-            if (name.indexOf("융합석") == -1){
+            if (name.indexOf("융합석") == -1){ // 기억 장비일 때
                 cal = (value[0] + 2228) - ((value[1] + 29) * itemResult["무색큐브조각"] * 0.97) - ((valueToggle == "힘의 정수") ? itemResult["힘의정수1개상자"] * 0.97 : itemResult[itemApoResult]);
             }
-            else if (name.indexOf("레전") == 0){
+            else if (name.indexOf("레전") == 0){ // 레전융합석일 때
                 cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97 / 3);
             }
-            else if (name.indexOf("에픽") == 0){
+            else if (name.indexOf("에픽") == 0){ // 에픽융합석일 때
                 cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97);
             }
-            else if (name.indexOf("태초") == 0){
+            else if (name.indexOf("태초") == 0){ // 태초융합석일 때
                 cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97)
             }
-            equipmentResult[name] = Math.floor(cal);
+            equipmentResult[name] = Math.floor(cal); // 소수점 버리고 객체에 이름이랑 판매 - 해체 값 저장
         }
         return equipmentResult;
     };
