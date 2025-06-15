@@ -11,11 +11,24 @@ const itemIdApoJson = {
     에픽소울결정 : "c7d845c65ab9dbcff6e55dc910fbea87",
     태초소울결정 : "d288ebf406a65f4ec23d1f9c33227888"
 };
+const equipmentInf = {
+    상의 : [24864, 328],
+    하의 : [21312, 281],
+    어깨 : [17760, 234],
+    벨트 : [15984, 210],
+    신발 : [15984, 210],
+    장신구 : [24864, 328],
+    특수장비 : [24864, 328],
+    레전융합석 : [16560, 196],
+    에픽융합석 : [25984, 342],
+    태초융합석 : [29952, 395]
+};
 async function test(req, res) {
     let apiKey = process.env.API_KEY;  //apikey
     let limit = 50; // 몇개 검색할건지
-    let itemResult = await auctionAverage(itemIdJson);
-    let itemApoResult = await apoResult(itemIdApoJson);
+    let valueToggle = "힘의 정수"; // 힘의 정수로 판단할지, 종말의 계시로 판단할지 토글용
+    let itemResult = await auctionAverage(itemIdJson); // 무색큐브조각, 황금큐브조각, 힘의정수1개상자 가격 객체
+    let itemApoResult = await apoResult(itemIdApoJson); // 종말의 계시 1개 가격 계산
 
     async function auctionSearch(itemId){ // 경매장 api 검색 함수
         let url = `https://api.neople.co.kr/df/auction-sold?limit=${limit}&itemId=${itemId}&apikey=${apiKey}`;
@@ -68,8 +81,28 @@ async function test(req, res) {
         sum = Math.floor(sum); // 소수점 버림
         return sum;
     };
-    
-    res.send(JSON.stringify(itemResult));
+
+    function equipmentCal(){ //판매 - 해체 효율 계산 함수, 양수면 판매가 이득
+        let equipmentResult = {};
+        for(const [name, value] of Object.entries(equipmentInf)){
+            let cal = 0;
+            if (name.indexOf("융합석") == -1){
+                cal = (value[0] + 2228) - ((value[1] + 29) * itemResult["무색큐브조각"] * 0.97) - ((valueToggle == "힘의 정수") ? itemResult["힘의정수1개상자"] * 0.97 : itemResult[itemApoResult]);
+            }
+            else if (name.indexOf("레전") == 0){
+                cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97 / 3);
+            }
+            else if (name.indexOf("에픽") == 0){
+                cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97);
+            }
+            else if (name.indexOf("태초") == 0){
+                cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97)
+            }
+            equipmentResult[name] = Math.floor(cal);
+        }
+        return equipmentResult;
+    };
+    res.send(JSON.stringify(equipmentCal()));
 };
 module.exports = {
     test,
