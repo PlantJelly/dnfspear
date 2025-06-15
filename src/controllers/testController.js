@@ -90,7 +90,7 @@ async function test(req, res) {
                 cal = (value[0] + 2228) - ((value[1] + 29) * itemResult["무색큐브조각"] * 0.97) - ((valueToggle == "힘의 정수") ? itemResult["힘의정수1개상자"] * 0.97 : itemResult[itemApoResult]);
             }
             else if (name.indexOf("레전") == 0){ // 레전융합석일 때
-                cal = value[0] + (itemResult["황금큐브조각"]*0.97) -500 - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97 / 3); // 500은 유저 해체기 가격, 나중에 프론트엔드에서 받기
+                cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97 / 3);
             }
             else if (name.indexOf("에픽") == 0){ // 에픽융합석일 때
                 cal = value[0] - (value[1] * itemResult["무색큐브조각"]*0.97) - (itemResult["힘의정수1개상자"] * 0.97);
@@ -100,7 +100,6 @@ async function test(req, res) {
             }
             equipmentResult[name] = Math.floor(cal); // 소수점 버리고 객체에 이름이랑 판매 - 해체 값 저장
         }
-        equipmentResult["레전밀봉"] = ((equipmentResult["레전융합석"]*36) + equipmentInf["레전융합석"][0]); // 밀봉한게 이거 이상 팔려야 이득
         return equipmentResult;
     };
     res.send(JSON.stringify(equipmentCal()));
