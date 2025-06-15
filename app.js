@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
 const testController = require("./src/controllers/testController.js");
 
 // 테스트용 라우트 추가
-app.get("/test", testController);
+app.get("/test", testController.test);
 
 app.listen(app.get("port"), () => {
     console.log(app.get("port"), "번 포트에서 대기 중");
