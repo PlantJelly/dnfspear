@@ -1,28 +1,27 @@
 {
-    "name": "dnfspear",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "start": "node app.js",
-        "dev": "nodemon app.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/PlantJelly/dnfspear.git"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/PlantJelly/dnfspear/issues"
-    },
-    "homepage": "https://github.com/PlantJelly/dnfspear#readme",
-    "dependencies": {
-        "dotenv": "^16.5.0",
-        "express": "^5.1.0"
-    },
-    "devDependencies": {
-        "nodemon": "^3.1.10"
-    }
+  "name": "dnfspear",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PlantJelly/dnfspear.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PlantJelly/dnfspear/issues"
+  },
+  "homepage": "https://github.com/PlantJelly/dnfspear#readme",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
 }
