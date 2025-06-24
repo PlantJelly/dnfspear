@@ -7,7 +7,7 @@
   async function fetchTest() {
     errorMsg = '';
     try {
-      const res = await fetch(`/test`);
+      const res = await fetch(`/archive-calculator`);
       if (!res.ok) {
         errorMsg = await res.text();
         apiResult = null;
@@ -21,10 +21,10 @@
   }
 </script>
 
-<h1>테스트 페이지</h1>
-<p>아래 버튼을 누르면 서버에서 api 값을 받아옵니다.</p>
+<h1>기록실 효율 계산기</h1>
 
 <button on:click={fetchTest}>요청</button>
+<br>
 
 {#if apiResult !== null}
   <p>{apiResult}</p>

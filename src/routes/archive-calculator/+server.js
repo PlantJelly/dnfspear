@@ -28,7 +28,7 @@ const equipmentInf = {
 };
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url }) {
+export async function GET({ req }) {
     let valueToggle = "힘의 정수"; // 힘의 정수로 판단할지, 종말의 계시로 판단할지 토글용
     let itemResult = await auctionAverage(itemIdJson); // 무색큐브조각, 황금큐브조각, 힘의정수1개상자 가격 객체
     let itemApoResult = await apoResult(itemIdApoJson); // 종말의 계시 1개 가격 계산

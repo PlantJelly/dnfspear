@@ -1,2 +1,3 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<h1>DNF Spear</h1>
+<a href="/archive-calculator">기록실 효율 계산기</a>
+<a href="/doomoracle-week">주간 종말의 계시</a>
