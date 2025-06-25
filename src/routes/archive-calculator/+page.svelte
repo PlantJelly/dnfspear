@@ -1,13 +1,24 @@
 <script>
 // @ts-nocheck
+import {onMount} from 'svelte'; // 사이트 첫 접속시 함수 호출용
 
   let apiResult = {};
   let errorMsg = '';
+  let toggle = '종말의 계시'; // 첫값이 힘의 정수가 되기위한 기본값 종말의 계시
 
-  async function fetchTest() {
+onMount(async () => { // 첫 실행시 실행
+  fetchToggle(); // 종말의 계시 기본값으로 효율 계산 실행
+})
+
+  async function fetchToggle() { // 토글값에 따라 값 요청하기
+    if (toggle == '힘의 정수'){
+      toggle = '종말의 계시';
+    }else if (toggle == '종말의 계시'){
+      toggle = '힘의 정수';
+    }
     errorMsg = '';
     try {
-      const res = await fetch(`/archive-calculator`);
+      const res = await fetch(`/archive-calculator?toggle=${toggle}`);
       if (!res.ok) {
         errorMsg = await res.text();
         apiResult = null;
@@ -33,7 +44,15 @@
 
 <h1>기록실 효율 계산기</h1>
 
-<button  on:click={fetchTest}>갱신</button>
+<button on:click={fetchToggle}>
+  {#if toggle == '힘의 정수'}
+    힘의 정수
+  {:else if toggle == '종말의 계시'}
+    종말의 계시
+  {:else}
+    오류
+  {/if}
+</button>
 <br>
 
 <div id="equipment">

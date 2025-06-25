@@ -28,8 +28,8 @@ const equipmentInf = {
 };
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ req }) {
-    let valueToggle = "힘의 정수"; // 힘의 정수로 판단할지, 종말의 계시로 판단할지 토글용
+export async function GET({ url }) {
+    let valueToggle = url.searchParams.get('toggle'); // 힘의정수로 할지 종말의 계시로 할지 프론트엔드에서 값 받아오기
     let itemResult = await auctionAverage(itemIdJson); // 무색큐브조각, 황금큐브조각, 힘의정수1개상자 가격 객체
     let itemApoResult = await apoResult(itemIdApoJson); // 종말의 계시 1개 가격 계산
 
@@ -37,8 +37,8 @@ export async function GET({ req }) {
         // 경매장 api 검색 함수
         let apiKey = env.API_KEY; //apikey
         let limit = 50; // 몇개 검색할건지
-        let url = `https://api.neople.co.kr/df/auction-sold?limit=${limit}&itemId=${itemId}&apikey=${apiKey}`;
-        const fetched = await fetch(url); // api 호출
+        let dnfApiUrl = `https://api.neople.co.kr/df/auction-sold?limit=${limit}&itemId=${itemId}&apikey=${apiKey}`;
+        const fetched = await fetch(dnfApiUrl); // api 호출
         const data = await fetched.json(); // 원하는 값을 객체로 변환
         return data;
     }
@@ -107,13 +107,13 @@ export async function GET({ req }) {
             let cal = 0;
             if (name.indexOf("융합석") == -1) {
                 // 기억 장비일 때
-                cal = value[0] + 2228 - (value[1] + 29) * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemResult[itemApoResult]);
+                cal = value[0] + 2228 - (value[1] + 29) * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
             } else if (name.indexOf("레전") == 0) {
                 // 레전융합석일 때
                 cal = value[0] + itemResult["황금큐브조각"] * 0.97 - 500 - value[1] * itemResult["무색큐브조각"] * 0.97 - (itemResult["힘의정수1개상자"] * 0.97) / 3; // 500은 유저 해체기 가격, 나중에 프론트엔드에서 받기
             } else if (name.indexOf("에픽") == 0) {
                 // 에픽융합석일 때
-                cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97 - itemResult["힘의정수1개상자"] * 0.97;
+                cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
             } else if (name.indexOf("태초") == 0) {
                 // 태초융합석일 때
                 cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97;
