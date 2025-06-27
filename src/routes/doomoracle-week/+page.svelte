@@ -2,31 +2,19 @@
     let check = false;
     let id = 1;
     let name = "";
+    let server = "cain";
+    let apiResult = {
+        이름 : "",
+        명성 : 0
+    };
     let tableData = [
-        {순서 : 1, 
-        캐릭터 : '캐릭터이름',
-        흉몽 : false, 
-        여신전 : false, 
-        애쥬어 : false, 
-        달잠호 : false, 
-        계곡 : false, 
-        꿈솔 : false, 
-        안개신 : false, 
-        싱글나벨 : false, 
-        매칭나벨 : false, 
-        레이드나벨 : false, 
-        베누스1단 : false, 
-        베누스2단 : false, 
-        패스지정 : false, 
-        PC방 : false, 
-        종말의계시 : 0,
-        헬 : 0}
     ];
     function addRow() {
         id = id + 1;
         const newRow = {
             순서 : id, 
-            캐릭터 : '캐릭터이름',
+            캐릭터 : apiResult["이름"],
+            명성 : apiResult["명성"],
             흉몽 : false, 
             여신전 : false, 
             애쥬어 : false, 
@@ -46,8 +34,10 @@
         };
         tableData = [...tableData, newRow];
     }
-    function searchCharacter() {
-        
+    async function searchCharacter() {
+        let type = "캐릭터검색";
+        const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
+        apiResult = await res.json();
     }
 </script>
 
@@ -63,15 +53,15 @@
 </style>
 
 <h1>주간 종말의 계시</h1>
-<select>
-    <option value="1">안톤</option>
-    <option value="2">바칼</option>
-    <option value="3">카인</option>
-    <option value="4">카시야스</option>
-    <option value="5">디레지에</option>
-    <option value="6">힐더</option>
-    <option value="7">프레이</option>
-    <option value="8">시로코</option>
+<select bind:value={server}>
+    <option value="anton">안톤</option>
+    <option value="bakal">바칼</option>
+    <option value="cain">카인</option>
+    <option value="casillas">카시야스</option>
+    <option value="diregie">디레지에</option>
+    <option value="hilder">힐더</option>
+    <option value="prey">프레이</option>
+    <option value="siroco">시로코</option>
 </select>
 <input type="text" name="캐릭터이름" bind:value={name} placeholder="캐릭터 이름 입력">
 <button on:click={searchCharacter}>검색</button>
@@ -80,6 +70,7 @@
     <thead>
         <tr>
             <th rowspan="2">캐릭터</th>
+            <th rowspan="2">명성</th>
             <th colspan="6">상급던전</th>
             <th colspan="4">레이드</th>
             <th colspan="2">베누스</th>
@@ -109,6 +100,7 @@
         {#each tableData as row (row["순서"])}
         <tr>
             <td>{row["캐릭터"]}</td>
+            <td>{row["명성"]}</td>
             <td><input type="checkbox" bind:checked={row["흉몽"]}></td>
             <td><input type="checkbox" bind:checked={row["여신전"]}></td>
             <td><input type="checkbox" bind:checked={row["애쥬어"]}></td>

@@ -2,9 +2,9 @@
 // @ts-nocheck
 import {onMount} from 'svelte'; // 사이트 첫 접속시 함수 호출용
 
-  let apiResult = {};
-  let errorMsg = '';
-  let toggle = '종말의 계시'; // 첫값이 힘의 정수가 되기위한 기본값 종말의 계시
+let apiResult = {};
+let errorMsg = '';
+let toggle = '종말의 계시'; // 첫값이 힘의 정수가 되기위한 기본값 종말의 계시
 
 onMount(async () => { // 첫 실행시 실행
   fetchToggle(); // 종말의 계시 기본값으로 효율 계산 실행
