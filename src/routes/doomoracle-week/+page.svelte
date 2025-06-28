@@ -3,6 +3,20 @@
     let id = 1;
     let name = "";
     let server = "cain";
+    const dungeonResult = { //던전 클리어 종말의 계시와 헬 배율
+    안개신 : [160, 0],
+    싱글나벨 : [80, 7],
+    매칭나벨 : [100, 8],
+    레이드나벨 : [160, 11],
+    베누스1단 : [60, 5],
+    베누스2단 : [100, 8],
+    계곡 : [40, 3],
+    꿈솔 : [60, 4],
+    호수 : [60, 7],
+    애쥬어 : [100, 10],
+    여신전 : [120, 11],
+    흉몽 : [140, 12]
+    };
     let apiResult = {
         이름 : "",
         명성 : 0
@@ -15,18 +29,18 @@
             순서 : id, 
             캐릭터 : apiResult["이름"],
             명성 : apiResult["명성"],
-            흉몽 : false, 
-            여신전 : false, 
-            애쥬어 : false, 
-            달잠호 : false, 
-            계곡 : false, 
-            꿈솔 : false, 
-            안개신 : false, 
+            흉몽 : (apiResult["명성"] >= 52952 ? true : false), 
+            여신전 : (apiResult["명성"] >= 48988 ? true : false), 
+            애쥬어 : (apiResult["명성"] >= 44929 && apiResult["명성"] < 52952 ? true : false), 
+            달잠호 : (apiResult["명성"] >= 34749 && apiResult["명성"] < 48988 ? true : false), 
+            계곡 : (apiResult["명성"] >= 23016 && apiResult["명성"] < 44929 ? true : false), 
+            꿈솔 : (apiResult["명성"] >= 16316 && apiResult["명성"] < 34749 ? true : false), 
+            안개신 : (apiResult["명성"] >= 30135 ? true : false), 
             싱글나벨 : false, 
-            매칭나벨 : false, 
-            레이드나벨 : false, 
-            베누스1단 : false, 
-            베누스2단 : false, 
+            매칭나벨 : (apiResult["명성"] >= 47684 && apiResult["명성"] < 61757 ? true : false), 
+            레이드나벨 : (apiResult["명성"] >= 65000 ? true : false), 
+            베누스1단 : (apiResult["명성"] >= 41929 && apiResult["명성"] < 52000 ? true : false), 
+            베누스2단 : (apiResult["명성"] >= 52000 ? true : false), 
             패스지정 : false, 
             PC방 : false,
             종말의계시 : 0,
@@ -38,6 +52,17 @@
         let type = "캐릭터검색";
         const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
         apiResult = await res.json();
+    }
+    function hellCalculator(character) {
+        let apo = 0;
+        let hell = 0;
+        for (let dungeon in character) {
+            if (character[dungeon] == true) {
+                apo += dungeonResult[dungeon][0];
+                hell += dungeonResult[dungeon][1];
+            }
+        }
+        return [apo, hell];
     }
 </script>
 
@@ -115,6 +140,9 @@
             <td><input type="checkbox" bind:checked={row["베누스2단"]}></td>
             <td><input type="checkbox" bind:checked={row["패스지정"]}></td>
             <td><input type="checkbox" bind:checked={row["PC방"]}></td>
+            <script>
+                [row["종말의계시"], row["헬"]] = hellCalculator(row);
+            </script>
             <td>{row["종말의계시"]}</td>
             <td>{row["헬"]}</td>
         </tr>
