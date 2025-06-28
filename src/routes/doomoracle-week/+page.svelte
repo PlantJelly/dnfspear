@@ -67,18 +67,17 @@
                 apo += dungeonResult[dungeon][0];
                 hell += dungeonResult[dungeon][1];
             }
-        }
-        let bonusApo = (apo - character["안개신"]? 160 : 0)*0.1;
-        apo = apo + bonusApo * (character["패스지정"]? 1 : 0 + character["PC방"]? 1 : 0);
+        }   
+        let bonusApo = (apo - (character["안개신"]? 160 : 0)) * 0.1;
+        apo = apo + bonusApo * ((character["패스지정"]? 1 : 0) + (character["PC방"]? 1 : 0));
         return [apo, hell];
     }
     function updateHell(idx) {
-    const [apo, hell] = hellCalculator(tableData[idx]);
-    tableData[idx]["종말의계시"] = apo;
-    tableData[idx]["헬"] = hell;
-    // tableData를 새 배열로 할당해야 반응성이 보장됨
-    tableData = [...tableData];
-}
+        const [apo, hell] = hellCalculator(tableData[idx]);
+        tableData[idx]["종말의계시"] = apo;
+        tableData[idx]["헬"] = hell;
+        tableData = [...tableData];
+    }
 </script>
 
 <style>
@@ -158,6 +157,6 @@
     <td>{row["종말의계시"]}</td>
     <td>{row["헬"]}</td>
 </tr>
-{/each}
+        {/each}
     </tbody>
 </table>
