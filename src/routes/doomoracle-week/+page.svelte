@@ -1,6 +1,6 @@
 <script>
     let check = false;
-    let id = 1;
+    let id = 0;
     let name = "";
     let server = "cain";
     const dungeonResult = { //던전 클리어 종말의 계시와 헬 배율
@@ -12,7 +12,7 @@
     베누스2단 : [100, 8],
     계곡 : [40, 3],
     꿈솔 : [60, 4],
-    호수 : [60, 7],
+    달잠호 : [60, 7],
     애쥬어 : [100, 10],
     여신전 : [120, 11],
     흉몽 : [140, 12]
@@ -24,7 +24,6 @@
     let tableData = [
     ];
     function addRow() {
-        id = id + 1;
         const newRow = {
             순서 : id, 
             캐릭터 : apiResult["이름"],
@@ -47,6 +46,10 @@
             헬 : 0
         };
         tableData = [...tableData, newRow];
+        let [apo, hell] = hellCalculator(tableData[id]);
+        tableData[id]["종말의계시"] = apo;
+        tableData[id]["헬"] = hell;
+        id = id + 1;
     }
     async function searchCharacter() {
         let type = "캐릭터검색";
@@ -57,14 +60,18 @@
         let apo = 0;
         let hell = 0;
         for (let dungeon in character) {
+            if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬"].includes(dungeon)) {
+                continue;
+            }
             if (character[dungeon] == true) {
                 apo += dungeonResult[dungeon][0];
                 hell += dungeonResult[dungeon][1];
             }
         }
+        let bonusApo = (apo - character["안개신"]? 160 : 0)*0.1;
+        apo = apo + bonusApo * (character["패스지정"]? 1 : 0 + character["PC방"]? 1 : 0);
         return [apo, hell];
     }
-
     function updateHell(idx) {
     const [apo, hell] = hellCalculator(tableData[idx]);
     tableData[idx]["종말의계시"] = apo;
