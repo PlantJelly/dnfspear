@@ -64,6 +64,14 @@
         }
         return [apo, hell];
     }
+
+    function updateHell(idx) {
+    const [apo, hell] = hellCalculator(tableData[idx]);
+    tableData[idx]["종말의계시"] = apo;
+    tableData[idx]["헬"] = hell;
+    // tableData를 새 배열로 할당해야 반응성이 보장됨
+    tableData = [...tableData];
+}
 </script>
 
 <style>
@@ -122,30 +130,27 @@
         </tr>
     </thead>
     <tbody>
-        {#each tableData as row (row["순서"])}
-        <tr>
-            <td>{row["캐릭터"]}</td>
-            <td>{row["명성"]}</td>
-            <td><input type="checkbox" bind:checked={row["흉몽"]}></td>
-            <td><input type="checkbox" bind:checked={row["여신전"]}></td>
-            <td><input type="checkbox" bind:checked={row["애쥬어"]}></td>
-            <td><input type="checkbox" bind:checked={row["달잠호"]}></td>
-            <td><input type="checkbox" bind:checked={row["계곡"]}></td>
-            <td><input type="checkbox" bind:checked={row["꿈솔"]}></td>
-            <td><input type="checkbox" bind:checked={row["안개신"]}></td>
-            <td><input type="checkbox" bind:checked={row["싱글나벨"]}></td>
-            <td><input type="checkbox" bind:checked={row["매칭나벨"]}></td>
-            <td><input type="checkbox" bind:checked={row["레이드나벨"]}></td>
-            <td><input type="checkbox" bind:checked={row["베누스1단"]}></td>
-            <td><input type="checkbox" bind:checked={row["베누스2단"]}></td>
-            <td><input type="checkbox" bind:checked={row["패스지정"]}></td>
-            <td><input type="checkbox" bind:checked={row["PC방"]}></td>
-            <script>
-                [row["종말의계시"], row["헬"]] = hellCalculator(row);
-            </script>
-            <td>{row["종말의계시"]}</td>
-            <td>{row["헬"]}</td>
-        </tr>
-        {/each}
+        {#each tableData as row, i (row["순서"])}
+<tr>
+    <td>{row["캐릭터"]}</td>
+    <td>{row["명성"]}</td>
+    <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateHell(i)}></td>
+    <td>{row["종말의계시"]}</td>
+    <td>{row["헬"]}</td>
+</tr>
+{/each}
     </tbody>
 </table>
