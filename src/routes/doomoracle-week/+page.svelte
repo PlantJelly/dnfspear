@@ -59,23 +59,43 @@
     function hellCalculator(character) {
         let apo = 0;
         let hell = 0;
+        let advancedDungeon = 0;
+        let legion = 0;
+        let raid = 0;
         for (let dungeon in character) {
             if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬"].includes(dungeon)) {
                 continue;
             }
             if (character[dungeon] == true) {
+                if (["흉몽", "여신전", "애쥬어", "달잠호", "꿈솔", "계곡"].includes(dungeon)) {
+                    advancedDungeon += 1;
+                }
+                else if (["베누스1단", "베누스2단"].includes(dungeon)){
+                    legion += 1;
+                }
+                else if (["싱글나벨", "매칭나벨", "레이드나벨"].includes(dungeon)){
+                    raid += 1;
+                }
                 apo += dungeonResult[dungeon][0];
                 hell += dungeonResult[dungeon][1];
             }
-        }   
+        }
+        if (advancedDungeon > 2 || legion > 1 || raid > 1 ){
+            return [apo, hell, false];
+        }
         let bonusApo = (apo - (character["안개신"]? 160 : 0)) * 0.1;
         apo = apo + bonusApo * ((character["패스지정"]? 1 : 0) + (character["PC방"]? 1 : 0));
-        return [apo, hell];
+        return [apo, hell, true];
     }
-    function updateHell(idx) {
-        const [apo, hell] = hellCalculator(tableData[idx]);
-        tableData[idx]["종말의계시"] = apo;
-        tableData[idx]["헬"] = hell;
+    function updateHell(idx, check) {
+        let checkValue = hellCalculator(tableData[idx]);
+        if (checkValue[2] == false){
+            tableData[idx][check] = false;
+            window.alert("방금 체크한값은 최대 보상횟수를 초과했습니다.");
+            return;
+        }
+        tableData[idx]["종말의계시"] = checkValue[0];
+        tableData[idx]["헬"] = checkValue[1];
         tableData = [...tableData];
     }
 </script>
@@ -140,18 +160,18 @@
 <tr>
     <td>{row["캐릭터"]}</td>
     <td>{row["명성"]}</td>
-    <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateHell(i)}></td>
+    <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i, "흉몽")}></td>
+    <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i, "여신전")}></td>
+    <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i, "애쥬어")}></td>
+    <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i, "달잠호")}></td>
+    <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i, "계곡")}></td>
+    <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i, "꿈솔")}></td>
+    <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i, "안개신")}></td>
+    <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateHell(i, "싱글나벨")}></td>
+    <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateHell(i, "매칭나벨")}></td>
+    <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateHell(i, "레이드나벨")}></td>
+    <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateHell(i, "베누스1단")}></td>
+    <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateHell(i, "베누스2단")}></td>
     <td><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateHell(i)}></td>
     <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateHell(i)}></td>
     <td>{row["종말의계시"]}</td>
