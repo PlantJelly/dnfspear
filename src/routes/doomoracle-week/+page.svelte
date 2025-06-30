@@ -2,7 +2,7 @@
     let check = false;
     let id = 0;
     let name = "";
-    let server = "cain";
+    let server = "";
     const dungeonResult = { //던전 클리어 종말의 계시와 헬 배율
     안개신 : [160, 0],
     싱글나벨 : [80, 7],
@@ -19,7 +19,8 @@
     };
     let apiResult = {
         이름 : "",
-        명성 : 0
+        명성 : 0,
+        ID : ""
     };
     let tableData = [
     ];
@@ -49,9 +50,21 @@
         let [apo, hell] = hellCalculator(tableData[id]);
         tableData[id]["종말의계시"] = apo;
         tableData[id]["헬"] = hell;
-        id = id + 1;
+        apiResult["이름"] = "";
+        server = "";
+        apiResult["명성"] = 0;
+        apiResult["ID"] = "";
+        id += 1;
     }
     async function searchCharacter() {
+        if (name == ""){
+            window.alert("캐릭터명을 입력해주세요");
+            return;
+        }
+        else if (server == ""){
+            window.alert("서버를 입력해주세요")
+            return;
+        }
         let type = "캐릭터검색";
         const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
         apiResult = await res.json();
@@ -98,6 +111,31 @@
         tableData[idx]["헬"] = checkValue[1];
         tableData = [...tableData];
     }
+    function deleteRow(i) {
+        tableData.splice(i, 1);
+        id -= 1;
+        tableData = [...tableData];
+    }
+    function servernameKorean(servername) {
+        switch (servername){
+            case "cain":
+                return "카인";
+            case "anton":
+                return "안톤";
+            case "bakal":
+                return "바칼";
+            case "casillas":
+                return "카시야스";
+            case "diregie":
+                return "디레지에";
+            case "hilder":
+                return "힐더";
+            case "prey":
+                return "프레이";
+            case "siroco":
+                return "시로코";
+        }
+    }
 </script>
 
 <style>
@@ -113,6 +151,7 @@
 
 <h1>주간 종말의 계시</h1>
 <select bind:value={server}>
+    <option value=""></option>
     <option value="anton">안톤</option>
     <option value="bakal">바칼</option>
     <option value="cain">카인</option>
@@ -125,6 +164,12 @@
 <input type="text" name="캐릭터이름" bind:value={name} placeholder="캐릭터 이름 입력">
 <button on:click={searchCharacter}>검색</button>
 <button on:click={addRow}>행 추가</button>
+{#if apiResult["이름"] != ""}
+    <div>
+    <img src="https://img-api.neople.co.kr/df/servers/{server}/characters/{apiResult["ID"]}?zoom=1" alt="캐릭터 사진" style="width: 150px;">
+    <p style="display:inline-block;">서버 : {servernameKorean(server)} 캐릭터 : {apiResult["이름"]}</p>
+    </div>
+{/if}
 <table>
     <thead>
         <tr>
@@ -135,6 +180,7 @@
             <th colspan="2">베누스</th>
             <th colspan="2">보너스</th>
             <th colspan="2">보상</th>
+            <th rowspan="2">삭제</th>
         </tr>
         <tr>
             <td>해방된 흉몽</td>
@@ -176,6 +222,7 @@
     <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateHell(i)}></td>
     <td>{row["종말의계시"]}</td>
     <td>{row["헬"]}</td>
+    <td><button on:click={() => deleteRow(row["순서"])}>X</button></td>
 </tr>
         {/each}
     </tbody>

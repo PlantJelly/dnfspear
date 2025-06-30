@@ -18,7 +18,8 @@ export async function GET({url}){
         const data = await fetched.json(); // 원하는 값을 객체로 변환
         let result = {
             이름 : data.rows[0]["characterName"],
-            명성 : data.rows[0]["fame"]
+            명성 : data.rows[0]["fame"],
+            ID : data.rows[0]["characterId"]
         }
         return result;
     }
