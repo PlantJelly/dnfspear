@@ -24,6 +24,8 @@
     };
     let tableData = [
     ];
+    let tableSumData = {
+    };
     function addRow() {
         const newRow = {
             순서 : id, 
@@ -44,14 +46,12 @@
             패스지정 : false, 
             PC방 : false,
             종말의계시 : 0,
+            헬배율 : 0,
             헬 : 0
         };
         tableData = [...tableData, newRow];
-        let [apo, hell] = hellCalculator(tableData[id]);
-        tableData[id]["종말의계시"] = apo;
-        tableData[id]["헬"] = hell;
+        updateHell(id, true);
         apiResult["이름"] = "";
-        server = "";
         apiResult["명성"] = 0;
         apiResult["ID"] = "";
         id += 1;
@@ -69,14 +69,14 @@
         const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
         apiResult = await res.json();
     }
-    function hellCalculator(character) {
+    function apoCalculator(character) {
         let apo = 0;
         let hell = 0;
         let advancedDungeon = 0;
         let legion = 0;
         let raid = 0;
         for (let dungeon in character) {
-            if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬"].includes(dungeon)) {
+            if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬배율", "헬"].includes(dungeon)) {
                 continue;
             }
             if (character[dungeon] == true) {
@@ -101,19 +101,27 @@
         return [apo, hell, true];
     }
     function updateHell(idx, check) {
-        let checkValue = hellCalculator(tableData[idx]);
+        let checkValue = apoCalculator(tableData[idx]);
         if (checkValue[2] == false){
             tableData[idx][check] = false;
             window.alert("방금 체크한값은 최대 보상횟수를 초과했습니다.");
             return;
         }
         tableData[idx]["종말의계시"] = checkValue[0];
-        tableData[idx]["헬"] = checkValue[1];
+        tableData[idx]["헬배율"] = checkValue[1];
+        tableData[idx]["헬"] = hellCalculator(tableData[idx]);
+        averageCharacter();
         tableData = [...tableData];
     }
     function deleteRow(i) {
         tableData.splice(i, 1);
-        id -= 1;
+        for (let table of tableData){
+            if (table["순서"] > i){
+                table["순서"] -= 1;
+            }
+        }
+        id = tableData.length;
+        averageCharacter();
         tableData = [...tableData];
     }
     function servernameKorean(servername) {
@@ -135,6 +143,55 @@
             case "siroco":
                 return "시로코";
         }
+    }
+    function hellCalculator(character){
+        let dungeonFee = 22;
+        if (character["패스지정"] == true){
+            dungeonFee -= 2;
+        }
+        if (character["PC방"] == true){
+            dungeonFee -= 2;
+        }
+        let hell = parseInt(character["종말의계시"] / dungeonFee);
+        hell = hell + character["헬배율"];
+        return hell;
+    }
+    function averageCharacter(){
+        let sumCharacter = {
+        명성 : 0,
+        흉몽 : 0, 
+        여신전 : 0, 
+        애쥬어 : 0, 
+        달잠호 : 0, 
+        계곡 : 0, 
+        꿈솔 : 0, 
+        안개신 : 0, 
+        싱글나벨 : 0, 
+        매칭나벨 : 0, 
+        레이드나벨 : 0, 
+        베누스1단 : 0, 
+        베누스2단 : 0, 
+        패스지정 : 0, 
+        종말의계시 : 0,
+        헬배율 : 0,
+        헬 : 0
+        };
+            for (let character of tableData){
+                sumCharacter["명성"] += character["명성"];
+                sumCharacter["종말의계시"] += character["종말의계시"];
+                sumCharacter["헬배율"] += character["헬배율"];
+                sumCharacter["헬"] += character["헬"];
+                for (let dungeon in character){
+                    if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬배율", "헬"].includes(dungeon)) {
+                        continue;
+                    }
+                    if (character[dungeon] == true){
+                        sumCharacter[dungeon] += 1;
+                    }
+                }
+            }
+            sumCharacter["명성"] = parseInt(sumCharacter["명성"] / tableData.length);
+        tableSumData = sumCharacter;
     }
 </script>
 
@@ -176,10 +233,11 @@
             <th rowspan="2">캐릭터</th>
             <th rowspan="2">명성</th>
             <th colspan="6">상급던전</th>
-            <th colspan="4">레이드</th>
+            <th>레이드</th>
+            <th colspan="3">나벨 레이드</th>
             <th colspan="2">베누스</th>
             <th colspan="2">보너스</th>
-            <th colspan="2">보상</th>
+            <th colspan="3">보상</th>
             <th rowspan="2">삭제</th>
         </tr>
         <tr>
@@ -190,40 +248,64 @@
             <td>꿈결 속 솔리다리스</td>
             <td>꿈결 속 흰 구름 계곡</td>
             <td>안개신 하드</td>
-            <td>나벨 싱글</td>
-            <td>나벨 매칭</td>
-            <td>나벨 레이드</td>
-            <td>베누스 1단</td>
-            <td>베누스 2단</td>
+            <td>싱글</td>
+            <td>매칭</td>
+            <td>레이드</td>
+            <td>1단</td>
+            <td>2단</td>
             <td>패스 지정</td>
             <td>PC방</td>
             <td>종말의 계시</td>
-            <td>헬</td>
+            <td>헬배율</td>
+            <td>총합</td>
         </tr>
     </thead>
     <tbody>
         {#each tableData as row, i (row["순서"])}
-<tr>
-    <td>{row["캐릭터"]}</td>
-    <td>{row["명성"]}</td>
-    <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i, "흉몽")}></td>
-    <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i, "여신전")}></td>
-    <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i, "애쥬어")}></td>
-    <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i, "달잠호")}></td>
-    <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i, "계곡")}></td>
-    <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i, "꿈솔")}></td>
-    <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i, "안개신")}></td>
-    <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateHell(i, "싱글나벨")}></td>
-    <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateHell(i, "매칭나벨")}></td>
-    <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateHell(i, "레이드나벨")}></td>
-    <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateHell(i, "베누스1단")}></td>
-    <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateHell(i, "베누스2단")}></td>
-    <td><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateHell(i)}></td>
-    <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateHell(i)}></td>
-    <td>{row["종말의계시"]}</td>
-    <td>{row["헬"]}</td>
-    <td><button on:click={() => deleteRow(row["순서"])}>X</button></td>
-</tr>
+        <tr>
+            <td>{row["캐릭터"]}</td>
+            <td>{row["명성"]}</td>
+            <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i, "흉몽")}></td>
+            <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i, "여신전")}></td>
+            <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i, "애쥬어")}></td>
+            <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i, "달잠호")}></td>
+            <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i, "계곡")}></td>
+            <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i, "꿈솔")}></td>
+            <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i, "안개신")}></td>
+            <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateHell(i, "싱글나벨")}></td>
+            <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateHell(i, "매칭나벨")}></td>
+            <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateHell(i, "레이드나벨")}></td>
+            <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateHell(i, "베누스1단")}></td>
+            <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateHell(i, "베누스2단")}></td>
+            <td><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateHell(i)}></td>
+            <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateHell(i)}></td>
+            <td>{row["종말의계시"]}개</td>
+            <td>{row["헬배율"]}판</td>
+            <td>{row["헬"]}판</td>
+            <td><button on:click={() => deleteRow(row["순서"])}>X</button></td>
+        </tr>
         {/each}
+        <tr>
+            <td>총합</td>
+            <td>{tableSumData["명성"]}</td>
+            <td>{tableSumData["흉몽"]}</td>
+            <td>{tableSumData["여신전"]}</td>
+            <td>{tableSumData["애쥬어"]}</td>
+            <td>{tableSumData["달잠호"]}</td>
+            <td>{tableSumData["계곡"]}</td>
+            <td>{tableSumData["꿈솔"]}</td>
+            <td>{tableSumData["안개신"]}</td>
+            <td>{tableSumData["싱글나벨"]}</td>
+            <td>{tableSumData["매칭나벨"]}</td>
+            <td>{tableSumData["레이드나벨"]}</td>
+            <td>{tableSumData["베누스1단"]}</td>
+            <td>{tableSumData["베누스2단"]}</td>
+            <td>{tableSumData["패스지정"]}</td>
+            <td></td>
+            <td>{tableSumData["종말의계시"]}{#if tableSumData["종말의계시"] != null}개{/if}</td>
+            <td>{tableSumData["헬배율"]}{#if tableSumData["헬배율"] != null}판{/if}</td>
+            <td>{tableSumData["헬"]}{#if tableSumData["헬"] != null}판{/if}</td>
+            <td></td>
+        </tr>
     </tbody>
 </table>
