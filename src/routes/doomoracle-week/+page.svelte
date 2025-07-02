@@ -12,8 +12,11 @@
     베누스2단 : [100, 8],
     계곡 : [40, 3],
     꿈솔 : [60, 4],
+    매칭달잠호 : [40, 6],
     달잠호 : [60, 7],
+    매칭애쥬어 : [80, 9],
     애쥬어 : [100, 10],
+    매칭여신전 : [100, 10],
     여신전 : [120, 11],
     흉몽 : [140, 12]
     };
@@ -32,8 +35,11 @@
             캐릭터 : apiResult["이름"],
             명성 : apiResult["명성"],
             흉몽 : (apiResult["명성"] >= 52952 ? true : false), 
+            매칭여신전 : false,
             여신전 : (apiResult["명성"] >= 48988 ? true : false), 
+            매칭애쥬어 : false,
             애쥬어 : (apiResult["명성"] >= 44929 && apiResult["명성"] < 52952 ? true : false), 
+            매칭달잠호 : false,
             달잠호 : (apiResult["명성"] >= 34749 && apiResult["명성"] < 48988 ? true : false), 
             계곡 : (apiResult["명성"] >= 23016 && apiResult["명성"] < 44929 ? true : false), 
             꿈솔 : (apiResult["명성"] >= 16316 && apiResult["명성"] < 34749 ? true : false), 
@@ -80,7 +86,7 @@
                 continue;
             }
             if (character[dungeon] == true) {
-                if (["흉몽", "여신전", "애쥬어", "달잠호", "꿈솔", "계곡"].includes(dungeon)) {
+                if (["흉몽", "여신전", "매칭여신전", "애쥬어", "매칭애쥬어", "달잠호", "매칭달잠호", "꿈솔", "계곡"].includes(dungeon)) {
                     advancedDungeon += 1;
                 }
                 else if (["베누스1단", "베누스2단"].includes(dungeon)){
@@ -88,6 +94,11 @@
                 }
                 else if (["싱글나벨", "매칭나벨", "레이드나벨"].includes(dungeon)){
                     raid += 1;
+                }
+                if (((dungeon == "여신전" || "매칭여신전") && (character["여신전"] && character["매칭여신전"] == true)) ||
+                        ((dungeon == "애쥬어" || "매칭애쥬어") && (character["애쥬어"] && character["매칭애쥬어"] == true)) ||
+                        ((dungeon == "달잠호" || "매칭달잠호") && (character["달잠호"] && character["매칭달잠호"] == true))){
+                    return [apo, hell, "matching"];
                 }
                 apo += dungeonResult[dungeon][0];
                 hell += dungeonResult[dungeon][1];
@@ -104,7 +115,12 @@
         let checkValue = apoCalculator(tableData[idx]);
         if (checkValue[2] == false){
             tableData[idx][check] = false;
-            window.alert("방금 체크한값은 최대 보상횟수를 초과했습니다.");
+            window.alert("방금 체크한값은 주간보상횟수를 초과했습니다.");
+            return;
+        }
+        else if (checkValue[2] == "matching"){
+            tableData[idx][check] = false;
+            window.alert("방금 체크한값은 일반과 매칭을 동시에 체크했습니다.");
             return;
         }
         tableData[idx]["종말의계시"] = checkValue[0];
@@ -161,8 +177,11 @@
         명성 : 0,
         흉몽 : 0, 
         여신전 : 0, 
+        매칭여신전 : 0,
         애쥬어 : 0, 
+        매칭애쥬어 : 0,
         달잠호 : 0, 
+        매칭달잠호 : 0,
         계곡 : 0, 
         꿈솔 : 0, 
         안개신 : 0, 
@@ -232,7 +251,7 @@
         <tr>
             <th rowspan="2">캐릭터</th>
             <th rowspan="2">명성</th>
-            <th colspan="6">상급던전</th>
+            <th colspan="9">상급던전</th>
             <th>레이드</th>
             <th colspan="3">나벨 레이드</th>
             <th colspan="2">베누스</th>
@@ -242,9 +261,9 @@
         </tr>
         <tr>
             <td>해방된 흉몽</td>
-            <td>죽음의 여신전</td>
-            <td>애쥬어 메인</td>
-            <td>달이 잠긴 호수</td>
+            <td colspan="2">죽음의 여신전</td>
+            <td colspan="2">애쥬어 메인</td>
+            <td colspan="2">달이 잠긴 호수</td>
             <td>꿈결 속 솔리다리스</td>
             <td>꿈결 속 흰 구름 계곡</td>
             <td>안개신 하드</td>
@@ -267,8 +286,11 @@
             <td>{row["명성"]}</td>
             <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateHell(i, "흉몽")}></td>
             <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateHell(i, "여신전")}></td>
+            <td><input type="checkbox" bind:checked={row["매칭여신전"]} on:change={() => updateHell(i, "매칭여신전")}><sub style="font-size: small;">(M)</sub></td>
             <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateHell(i, "애쥬어")}></td>
+            <td><input type="checkbox" bind:checked={row["매칭애쥬어"]} on:change={() => updateHell(i, "매칭애쥬어")}><sub style="font-size: small;">(M)</sub></td>
             <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateHell(i, "달잠호")}></td>
+            <td><input type="checkbox" bind:checked={row["매칭달잠호"]} on:change={() => updateHell(i, "매칭달잠호")}><sub style="font-size: small;">(M)</sub></td>
             <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateHell(i, "계곡")}></td>
             <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateHell(i, "꿈솔")}></td>
             <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateHell(i, "안개신")}></td>
@@ -290,8 +312,11 @@
             <td>{tableSumData["명성"]}</td>
             <td>{tableSumData["흉몽"]}</td>
             <td>{tableSumData["여신전"]}</td>
+            <td>{tableSumData["매칭여신전"]}</td>
             <td>{tableSumData["애쥬어"]}</td>
+            <td>{tableSumData["매칭애쥬어"]}</td>
             <td>{tableSumData["달잠호"]}</td>
+            <td>{tableSumData["매칭달잠호"]}</td>
             <td>{tableSumData["계곡"]}</td>
             <td>{tableSumData["꿈솔"]}</td>
             <td>{tableSumData["안개신"]}</td>
