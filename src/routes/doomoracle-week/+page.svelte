@@ -1,4 +1,6 @@
 <script>
+    import cookie from 'js-cookie';
+    import { onMount } from 'svelte';
     let check = false;
     let id = 0;
     let name = "";
@@ -29,6 +31,11 @@
     ];
     let tableSumData = {
     };
+    onMount(() => {
+        tableData = JSON.parse(cookie.get('adventureData'));
+        id = tableData[tableData.length-1]["순서"] + 1;
+        reNew();
+    });
     function addRow() {
         const newRow = {
             순서 : id, 
@@ -126,8 +133,7 @@
         tableData[idx]["종말의계시"] = checkValue[0];
         tableData[idx]["헬배율"] = checkValue[1];
         tableData[idx]["헬"] = hellCalculator(tableData[idx]);
-        averageCharacter();
-        tableData = [...tableData];
+        reNew();
     }
     function deleteRow(i) {
         tableData.splice(i, 1);
@@ -137,8 +143,7 @@
             }
         }
         id = tableData.length;
-        averageCharacter();
-        tableData = [...tableData];
+        reNew();
     }
     function servernameKorean(servername) {
         switch (servername){
@@ -211,6 +216,11 @@
             }
             sumCharacter["명성"] = parseInt(sumCharacter["명성"] / tableData.length);
         tableSumData = sumCharacter;
+    }
+    function reNew(){
+        averageCharacter();
+        tableData = [...tableData];
+        cookie.set('adventureData', JSON.stringify(tableData), { expires:7});
     }
 </script>
 
