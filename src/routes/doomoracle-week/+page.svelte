@@ -1,6 +1,7 @@
 <script>
-    import cookie from 'js-cookie';
+    import Cookie from 'js-cookie';
     import { onMount } from 'svelte';
+
     let check = false;
     let id = 0;
     let name = "";
@@ -31,8 +32,9 @@
     ];
     let tableSumData = {
     };
+    
     onMount(() => {
-        tableData = JSON.parse(cookie.get('adventureData'));
+        tableData = JSON.parse(Cookie.get('adventureData'));
         id = tableData[tableData.length-1]["순서"] + 1;
         reNew();
     });
@@ -220,7 +222,18 @@
     function reNew(){
         averageCharacter();
         tableData = [...tableData];
-        cookie.set('adventureData', JSON.stringify(tableData), { expires:7});
+        Cookie.set('adventureData', JSON.stringify(tableData), { expires:7});
+    }
+    function importTabledata(){
+        let importData = prompt("복사한 값을 아래에 입력해주세요.");
+        tableData = JSON.parse(importData);
+        reNew();
+    }
+    function exportTabledata(){
+        reNew();
+        let exportData = JSON.stringify(tableData);
+        window.alert("다음 알림창의 내용을 복사하세요.");
+        window.alert(exportData);
     }
 </script>
 
@@ -250,6 +263,8 @@
 <input type="text" name="캐릭터이름" bind:value={name} placeholder="캐릭터 이름 입력">
 <button on:click={searchCharacter}>검색</button>
 <button on:click={addRow}>행 추가</button>
+<button on:click={exportTabledata}>내보내기</button>
+<button on:click={importTabledata}>가져오기</button>
 {#if apiResult["이름"] != ""}
     <div>
     <img src="https://img-api.neople.co.kr/df/servers/{server}/characters/{apiResult["ID"]}?zoom=1" alt="캐릭터 사진" style="width: 150px;">
