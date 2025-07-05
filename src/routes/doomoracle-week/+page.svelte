@@ -1,11 +1,10 @@
 <script>
-    import Cookie from 'js-cookie';
-    import { onMount } from 'svelte';
+    import Cookie from 'js-cookie'; // 쿠키에 값 저장용 라이브러리
+    import { onMount } from 'svelte'; // 사이트 처음 접속했을때 로드용 라이브러리
 
-    let check = false;
-    let id = 0;
-    let name = "";
-    let server = "";
+    let id = 0; // 캐릭터 순서 기록, addRow함수에서 사용
+    let name = ""; // 검색창 캐릭터 이름용 변수, searchCharacter함수에서 사용
+    let server = ""; // 검색창 서버용 변수, searchCharacter함수에서 사용
     const dungeonResult = { //던전 클리어 종말의 계시와 헬 배율
     안개신 : [160, 0],
     싱글나벨 : [80, 7],
@@ -23,23 +22,23 @@
     여신전 : [120, 11],
     흉몽 : [140, 12]
     };
-    let apiResult = {
+    let apiResult = { // searchCharacter함수 작동 후 캐릭터 정보 저장용 객체
         이름 : "",
         명성 : 0,
         ID : ""
     };
-    let tableData = [
+    let tableData = [ // 표 정보가 들어갈 배열 선언
     ];
-    let tableSumData = {
+    let tableSumData = { // averageCharacter함수 작동 후 표 정보의 합, 평균을 객체로 저장
     };
     
-    onMount(() => {
+    onMount(() => { // 사이트 접속 시 쿠키에서 값을 가져오고, 순서 기록용 id 변수를 재설정한 후 reNew함수로 갱신
         tableData = JSON.parse(Cookie.get('adventureData'));
         id = tableData[tableData.length-1]["순서"] + 1;
         reNew();
     });
-    function addRow() {
-        const newRow = {
+    function addRow() { // tableData 배열에 행을 추가하는 함수
+        const newRow = { // tableData 배열에 저장할 객체 틀
             순서 : id, 
             캐릭터 : apiResult["이름"],
             명성 : apiResult["명성"],
@@ -71,7 +70,7 @@
         apiResult["ID"] = "";
         id += 1;
     }
-    async function searchCharacter() {
+    async function searchCharacter() { // 캐릭터 이름과 서버를 통해 api호출을 하는 함수
         if (name == ""){
             window.alert("캐릭터명을 입력해주세요");
             return;
@@ -84,43 +83,43 @@
         const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
         apiResult = await res.json();
     }
-    function apoCalculator(character) {
+    function apoCalculator(character) { // 캐릭터의 선택값을 dungeonResult를 통해 계산하여 종말의 계시와 헬 배율로 반환하는 함수
         let apo = 0;
         let hell = 0;
         let advancedDungeon = 0;
         let legion = 0;
         let raid = 0;
         for (let dungeon in character) {
-            if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬배율", "헬"].includes(dungeon)) {
+            if (["순서", "캐릭터", "명성", "패스지정", "PC방", "종말의계시", "헬배율", "헬"].includes(dungeon)) { // 던전이 아닌값은 오류방지를 위해 건너뛰기
                 continue;
             }
             if (character[dungeon] == true) {
-                if (["흉몽", "여신전", "매칭여신전", "애쥬어", "매칭애쥬어", "달잠호", "매칭달잠호", "꿈솔", "계곡"].includes(dungeon)) {
+                if (["흉몽", "여신전", "매칭여신전", "애쥬어", "매칭애쥬어", "달잠호", "매칭달잠호", "꿈솔", "계곡"].includes(dungeon)) { // 상급던전 2회 초과 확인용
                     advancedDungeon += 1;
                 }
-                else if (["베누스1단", "베누스2단"].includes(dungeon)){
+                else if (["베누스1단", "베누스2단"].includes(dungeon)){ // 베누스 2판 초과 확인용
                     legion += 1;
                 }
-                else if (["싱글나벨", "매칭나벨", "레이드나벨"].includes(dungeon)){
+                else if (["싱글나벨", "매칭나벨", "레이드나벨"].includes(dungeon)){ // 나벨레이드 2판 초과 확인용
                     raid += 1;
                 }
                 if (((dungeon == "여신전" || "매칭여신전") && (character["여신전"] && character["매칭여신전"] == true)) ||
                         ((dungeon == "애쥬어" || "매칭애쥬어") && (character["애쥬어"] && character["매칭애쥬어"] == true)) ||
-                        ((dungeon == "달잠호" || "매칭달잠호") && (character["달잠호"] && character["매칭달잠호"] == true))){
+                        ((dungeon == "달잠호" || "매칭달잠호") && (character["달잠호"] && character["매칭달잠호"] == true))){ // 일반 상급던전과 매칭 중복 확인용
                     return [apo, hell, "matching"];
                 }
                 apo += dungeonResult[dungeon][0];
                 hell += dungeonResult[dungeon][1];
             }
         }
-        if (advancedDungeon > 2 || legion > 1 || raid > 1 ){
+        if (advancedDungeon > 2 || legion > 1 || raid > 1 ){ // 상급던전 2회 초과 or 베누스 2판 초과 or 나벨레이드 2판 초과시 오류 반환
             return [apo, hell, false];
         }
-        let bonusApo = (apo - (character["안개신"]? 160 : 0)) * 0.1;
+        let bonusApo = (apo - (character["안개신"]? 160 : 0)) * 0.1; // 안개신 160개를 제외하고 종말의계시 10% 보너스 계산
         apo = apo + bonusApo * ((character["패스지정"]? 1 : 0) + (character["PC방"]? 1 : 0));
         return [apo, hell, true];
     }
-    function updateHell(idx, check) {
+    function updateHell(idx, check) { // 표의 체크박스로 호출되어서 apoCalculator함수의 값에 따라 오류를 표시하거나 계산값을 저장하는 함수
         let checkValue = apoCalculator(tableData[idx]);
         if (checkValue[2] == false){
             tableData[idx][check] = false;
@@ -137,7 +136,7 @@
         tableData[idx]["헬"] = hellCalculator(tableData[idx]);
         reNew();
     }
-    function deleteRow(i) {
+    function deleteRow(i) { // tableData의 행을 삭제 후 id값 재설정하는 함수
         tableData.splice(i, 1);
         for (let table of tableData){
             if (table["순서"] > i){
@@ -147,7 +146,7 @@
         id = tableData.length;
         reNew();
     }
-    function servernameKorean(servername) {
+    function servernameKorean(servername) { // 영문 서버명 -> 한글 서버명 출력 함수
         switch (servername){
             case "cain":
                 return "카인";
@@ -167,7 +166,7 @@
                 return "시로코";
         }
     }
-    function hellCalculator(character){
+    function hellCalculator(character){ // 종말의 계시를 헬 몇판인지 계산하는 함수
         let dungeonFee = 22;
         if (character["패스지정"] == true){
             dungeonFee -= 2;
@@ -179,7 +178,7 @@
         hell = hell + character["헬배율"];
         return hell;
     }
-    function averageCharacter(){
+    function averageCharacter(){ // 표에 저장된 캐릭터들의 정보를 취합하여 총합과 평균명성을 저장하는 함수
         let sumCharacter = {
         명성 : 0,
         흉몽 : 0, 
@@ -219,21 +218,26 @@
             sumCharacter["명성"] = parseInt(sumCharacter["명성"] / tableData.length);
         tableSumData = sumCharacter;
     }
-    function reNew(){
+    function reNew(){ // 쿠키, 표 정보 갱신용 함수
         averageCharacter();
         tableData = [...tableData];
         Cookie.set('adventureData', JSON.stringify(tableData), { expires:7});
     }
-    function importTabledata(){
+    function importTabledata(){ // 표 정보 내보내기 함수
         let importData = prompt("복사한 값을 아래에 입력해주세요.");
         tableData = JSON.parse(importData);
         reNew();
     }
-    function exportTabledata(){
+    function exportTabledata(){ // 내보낸 표 정보 가져오기 함수
         reNew();
         let exportData = JSON.stringify(tableData);
         window.alert("다음 알림창의 내용을 복사하세요.");
         window.alert(exportData);
+    }
+    function checkKeydown(event){ // 캐릭터 이름 검색시 Enter 확인용 함수
+        if (event.key === 'Enter'){
+            searchCharacter();
+        }
     }
 </script>
 
@@ -260,7 +264,7 @@
     <option value="prey">프레이</option>
     <option value="siroco">시로코</option>
 </select>
-<input type="text" name="캐릭터이름" bind:value={name} placeholder="캐릭터 이름 입력">
+<input type="text" name="캐릭터이름" bind:value={name} on:keydown={checkKeydown} placeholder="캐릭터 이름 입력">
 <button on:click={searchCharacter}>검색</button>
 <button on:click={addRow}>행 추가</button>
 <button on:click={exportTabledata}>내보내기</button>
