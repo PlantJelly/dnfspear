@@ -33,11 +33,27 @@
     };
     
     onMount(() => {
-        tableData = JSON.parse(Cookie.get('adventureData'));
-        id = tableData[tableData.length-1]["순서"] + 1;
-        reNew();
+        const savedData = Cookie.get('adventureData');
+        if (savedData) {
+            try {
+                tableData = JSON.parse(savedData);
+                if (tableData.length > 0) {
+                    id = tableData.reduce((max, p) => p.순서 > max ? p.순서 : max, tableData[0].순서) + 1;
+                } else {
+                    id = 0;
+                }
+                reNew();
+            } catch (e) {
+                tableData = [];
+            }
+        }
     });
+
     function addRow() {
+        if (!apiResult["이름"]) {
+            window.alert("먼저 캐릭터를 검색해주세요.");
+            return;
+        }
         const newRow = {
             순서 : id, 
             캐릭터 : apiResult["이름"],
@@ -64,7 +80,7 @@
             헬 : 0
         };
         tableData = [...tableData, newRow];
-        updateTableData(id, true);
+        updateTableData(tableData.length - 1, true);
         apiResult["이름"] = "";
         apiResult["명성"] = 0;
         apiResult["ID"] = "";
@@ -103,9 +119,9 @@
                 else if (["싱글나벨", "매칭나벨", "레이드나벨"].includes(cell)){
                     raidClearCount += 1;
                 }
-                if (((cell == "여신전" || "매칭여신전") && (row["여신전"] && row["매칭여신전"] == true)) ||
-                        ((cell == "애쥬어" || "매칭애쥬어") && (row["애쥬어"] && row["매칭애쥬어"] == true)) ||
-                        ((cell == "달잠호" || "매칭달잠호") && (row["달잠호"] && row["매칭달잠호"] == true))){
+                if (((cell == "여신전" || cell == "매칭여신전") && (row["여신전"] && row["매칭여신전"] == true)) ||
+                        ((cell == "애쥬어" || cell == "매칭애쥬어") && (row["애쥬어"] && row["매칭애쥬어"] == true)) ||
+                        ((cell == "달잠호" || cell == "매칭달잠호") && (row["달잠호"] && row["매칭달잠호"] == true))){
                     return [doomOracle, hell, "matching"];
                 }
                 doomOracle += dungeonResult[cell][0];
@@ -137,13 +153,7 @@
         reNew();
     }
     function deleteRow(i) {
-        tableData.splice(i, 1);
-        for (let table of tableData){
-            if (table["순서"] > i){
-                table["순서"] -= 1;
-            }
-        }
-        id = tableData.length;
+        tableData = tableData.filter(row => row.순서 !== i);
         reNew();
     }
     function servernameKorean(servername) {
@@ -179,6 +189,10 @@
         return hell;
     }
     function averageCharacter(){
+        if (tableData.length === 0) {
+            tableSumData = {};
+            return;
+        }
         let sumCharacter = {
         명성 : 0,
         흉몽 : 0, 
@@ -225,14 +239,24 @@
     }
     function importTabledata(){
         let importData = prompt("복사한 값을 아래에 입력해주세요.");
-        tableData = JSON.parse(importData);
-        reNew();
+        if (importData) {
+            try {
+                tableData = JSON.parse(importData);
+                reNew();
+            } catch (e) {
+                window.alert("가져오기 데이터 형식이 잘못되었습니다.");
+            }
+        }
     }
     function exportTabledata(){
         reNew();
         let exportData = JSON.stringify(tableData);
-        window.alert("다음 알림창의 내용을 복사하세요.");
-        window.alert(exportData);
+        navigator.clipboard.writeText(exportData).then(() => {
+            window.alert("클립보드에 복사되었습니다.");
+        }).catch(err => {
+            window.alert("복사에 실패했습니다.");
+            console.error('Could not copy text: ', err);
+        });
     }
     function checkKeydownEnter(event){
         if (event.key === 'Enter'){
@@ -241,125 +265,150 @@
     }
 </script>
 
-<style>
-    table{
-        border-collapse: collapse;
-        text-align: center;
-    }
-    th, td{
-        border: 1px solid black;
-        padding: 8px;
-    }
-</style>
+<div class="bg-gray-100 text-gray-800 min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="max-w-full mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-cyan-600">주간 종말의 계시 계산기</h1>
 
-<h1>주간 종말의 계시</h1>
-<select bind:value={server}>
-    <option value=""></option>
-    <option value="anton">안톤</option>
-    <option value="bakal">바칼</option>
-    <option value="cain">카인</option>
-    <option value="casillas">카시야스</option>
-    <option value="diregie">디레지에</option>
-    <option value="hilder">힐더</option>
-    <option value="prey">프레이</option>
-    <option value="siroco">시로코</option>
-</select>
-<input type="text" name="캐릭터이름" bind:value={name} on:keydown={checkKeydownEnter} placeholder="캐릭터 이름 입력">
-<button on:click={searchCharacter}>검색</button>
-<button on:click={addRow}>행 추가</button>
-<button on:click={exportTabledata}>내보내기</button>
-<button on:click={importTabledata}>가져오기</button>
-{#if apiResult["이름"] != ""}
-    <div>
-    <img src="https://img-api.neople.co.kr/df/servers/{server}/characters/{apiResult["ID"]}?zoom=1" alt="캐릭터 사진" style="width: 150px;">
-    <p style="display:inline-block;">서버 : {servernameKorean(server)} 캐릭터 : {apiResult["이름"]}</p>
+        <div class="bg-white p-4 rounded-lg mb-6 shadow-md">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                <div class="flex flex-col">
+                    <label for="server-select" class="mb-1 text-sm font-medium text-gray-600">서버</label>
+                    <select id="server-select" bind:value={server} class="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="">서버 선택</option>
+                        <option value="anton">안톤</option>
+                        <option value="bakal">바칼</option>
+                        <option value="cain">카인</option>
+                        <option value="casillas">카시야스</option>
+                        <option value="diregie">디레지에</option>
+                        <option value="hilder">힐더</option>
+                        <option value="prey">프레이</option>
+                        <option value="siroco">시로코</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="char-name" class="mb-1 text-sm font-medium text-gray-600">캐릭터 이름</label>
+                    <input id="char-name" type="text" bind:value={name} on:keydown={checkKeydownEnter} placeholder="캐릭터 이름 입력" class="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+                <div class="flex flex-col sm:col-span-2 md:col-span-1">
+                     <button on:click={searchCharacter} class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">검색</button>
+                </div>
+                <div class="flex flex-col sm:col-span-2 md:col-span-1">
+                    <button on:click={addRow} class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">현재 캐릭터 추가</button>
+                </div>
+            </div>
+        </div>
+
+        {#if apiResult["이름"] != ""}
+            <div class="bg-white p-4 rounded-lg mb-6 flex items-center space-x-4 shadow-md">
+                <img src="https://img-api.neople.co.kr/df/servers/{server}/characters/{apiResult["ID"]}?zoom=1" alt="캐릭터 사진" class="w-24 h-24 rounded-md border-2 border-gray-200">
+                <div>
+                    <p class="text-xl font-semibold text-gray-900">{apiResult["이름"]}</p>
+                    <p class="text-gray-500">서버: {servernameKorean(server)}</p>
+                    <p class="text-gray-500">명성: {apiResult["명성"]}</p>
+                </div>
+            </div>
+        {/if}
+
+        <div class="flex space-x-4 mb-6">
+            <button on:click={exportTabledata} class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 flex-1">내보내기</button>
+            <button on:click={importTabledata} class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 flex-1">가져오기</button>
+        </div>
+
+        <div class="overflow-x-auto shadow-md rounded-lg">
+            <table class="w-full text-sm text-center text-gray-600">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                        <th rowspan="2" class="px-4 py-3 border-b-2 border-r border-gray-200 w-32">캐릭터</th>
+                        <th rowspan="2" class="px-4 py-3 border-b-2 border-r border-gray-200 w-24">명성</th>
+                        <th colspan="9" class="px-4 py-3 border-b-2 border-r border-gray-200">상급던전</th>
+                        <th rowspan="2" class="px-2 py-3 border-b-2 border-r border-gray-200 w-16">안개신<br/>하드</th>
+                        <th colspan="3" class="px-4 py-3 border-b-2 border-r border-gray-200">나벨 레이드</th>
+                        <th colspan="2" class="px-4 py-3 border-b-2 border-r border-gray-200">베누스</th>
+                        <th colspan="2" class="px-4 py-3 border-b-2 border-r border-gray-200">보너스</th>
+                        <th colspan="3" class="px-4 py-3 border-b-2 border-r border-gray-200">보상</th>
+                        <th rowspan="2" class="px-4 py-3 border-b-2 border-gray-200 w-16">삭제</th>
+                    </tr>
+                    <tr>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">해방된<br/>흉몽</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">여신전</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">여신전<br/>(M)</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">애쥬어</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">애쥬어<br/>(M)</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">달잠호</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">달잠호<br/>(M)</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">솔리다<br>리스</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">흰구름<br/>계곡</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">싱글</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">매칭</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">레이드</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">1단</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">2단</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">패스<br/>지정</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">PC방</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-24">종말의<br/>계시</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">헬배율</th>
+                        <th class="p-2 border-b-2 border-r border-gray-200 w-16">총합</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each tableData as row, i (row["순서"])}
+                    <tr class="bg-white even:bg-gray-50 hover:bg-gray-100 border-b border-gray-200">
+                        <td class="p-2 border-r border-gray-200 font-medium text-gray-900 whitespace-nowrap">{row["캐릭터"]}</td>
+                        <td class="p-2 border-r border-gray-200">{row["명성"]}</td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateTableData(i, "흉몽")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateTableData(i, "여신전")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["매칭여신전"]} on:change={() => updateTableData(i, "매칭여신전")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateTableData(i, "애쥬어")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["매칭애쥬어"]} on:change={() => updateTableData(i, "매칭애쥬어")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateTableData(i, "달잠호")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["매칭달잠호"]} on:change={() => updateTableData(i, "매칭달잠호")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateTableData(i, "계곡")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateTableData(i, "꿈솔")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateTableData(i, "안개신")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateTableData(i, "싱글나벨")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateTableData(i, "매칭나벨")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateTableData(i, "레이드나벨")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateTableData(i, "베누스1단")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateTableData(i, "베누스2단")} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateTableData(i)} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-0 border-r border-gray-200"><label class="w-full h-12 flex items-center justify-center cursor-pointer"><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateTableData(i)} class="appearance-none w-6 h-6 bg-gray-200 checked:bg-cyan-400 rounded-md transition"></label></td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{row["종말의계시"]}개</td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{row["헬배율"]}판</td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{row["헬"]}판</td>
+                        <td class="p-2">
+                            <button on:click={() => deleteRow(row["순서"])} class="text-red-500 hover:text-red-700 font-bold">X</button>
+                        </td>
+                    </tr>
+                    {/each}
+                </tbody>
+                 <tfoot class="bg-gray-100 font-medium">
+                    <tr class="text-gray-800">
+                        <td class="p-2 border-r border-gray-200">총합</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["명성"] || 'N/A'}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["흉몽"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["여신전"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["매칭여신전"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["애쥬어"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["매칭애쥬어"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["달잠호"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["매칭달잠호"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["계곡"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["꿈솔"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["안개신"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["싱글나벨"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["매칭나벨"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["레이드나벨"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["베누스1단"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["베누스2단"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["패스지정"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200"></td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{tableSumData["종말의계시"] || 0}개</td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{tableSumData["헬배율"] || 0}판</td>
+                        <td class="p-2 border-r border-gray-200 whitespace-nowrap">{tableSumData["헬"] || 0}판</td>
+                        <td class="p-2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
-{/if}
-<table>
-    <thead>
-        <tr>
-            <th rowspan="2">캐릭터</th>
-            <th rowspan="2">명성</th>
-            <th colspan="9">상급던전</th>
-            <th>레이드</th>
-            <th colspan="3">나벨 레이드</th>
-            <th colspan="2">베누스</th>
-            <th colspan="2">보너스</th>
-            <th colspan="3">보상</th>
-            <th rowspan="2">삭제</th>
-        </tr>
-        <tr>
-            <td>해방된 흉몽</td>
-            <td colspan="2">죽음의 여신전</td>
-            <td colspan="2">애쥬어 메인</td>
-            <td colspan="2">달이 잠긴 호수</td>
-            <td>꿈결 속 솔리다리스</td>
-            <td>꿈결 속 흰 구름 계곡</td>
-            <td>안개신 하드</td>
-            <td>싱글</td>
-            <td>매칭</td>
-            <td>레이드</td>
-            <td>1단</td>
-            <td>2단</td>
-            <td>패스 지정</td>
-            <td>PC방</td>
-            <td>종말의 계시</td>
-            <td>헬배율</td>
-            <td>총합</td>
-        </tr>
-    </thead>
-    <tbody>
-        {#each tableData as row, i (row["순서"])}
-        <tr>
-            <td>{row["캐릭터"]}</td>
-            <td>{row["명성"]}</td>
-            <td><input type="checkbox" bind:checked={row["흉몽"]} on:change={() => updateTableData(i, "흉몽")}></td>
-            <td><input type="checkbox" bind:checked={row["여신전"]} on:change={() => updateTableData(i, "여신전")}></td>
-            <td><input type="checkbox" bind:checked={row["매칭여신전"]} on:change={() => updateTableData(i, "매칭여신전")}><sub style="font-size: small;">(M)</sub></td>
-            <td><input type="checkbox" bind:checked={row["애쥬어"]} on:change={() => updateTableData(i, "애쥬어")}></td>
-            <td><input type="checkbox" bind:checked={row["매칭애쥬어"]} on:change={() => updateTableData(i, "매칭애쥬어")}><sub style="font-size: small;">(M)</sub></td>
-            <td><input type="checkbox" bind:checked={row["달잠호"]} on:change={() => updateTableData(i, "달잠호")}></td>
-            <td><input type="checkbox" bind:checked={row["매칭달잠호"]} on:change={() => updateTableData(i, "매칭달잠호")}><sub style="font-size: small;">(M)</sub></td>
-            <td><input type="checkbox" bind:checked={row["계곡"]} on:change={() => updateTableData(i, "계곡")}></td>
-            <td><input type="checkbox" bind:checked={row["꿈솔"]} on:change={() => updateTableData(i, "꿈솔")}></td>
-            <td><input type="checkbox" bind:checked={row["안개신"]} on:change={() => updateTableData(i, "안개신")}></td>
-            <td><input type="checkbox" bind:checked={row["싱글나벨"]} on:change={() => updateTableData(i, "싱글나벨")}></td>
-            <td><input type="checkbox" bind:checked={row["매칭나벨"]} on:change={() => updateTableData(i, "매칭나벨")}></td>
-            <td><input type="checkbox" bind:checked={row["레이드나벨"]} on:change={() => updateTableData(i, "레이드나벨")}></td>
-            <td><input type="checkbox" bind:checked={row["베누스1단"]} on:change={() => updateTableData(i, "베누스1단")}></td>
-            <td><input type="checkbox" bind:checked={row["베누스2단"]} on:change={() => updateTableData(i, "베누스2단")}></td>
-            <td><input type="checkbox" bind:checked={row["패스지정"]} on:change={() => updateTableData(i)}></td>
-            <td><input type="checkbox" bind:checked={row["PC방"]} on:change={() => updateTableData(i)}></td>
-            <td>{row["종말의계시"]}개</td>
-            <td>{row["헬배율"]}판</td>
-            <td>{row["헬"]}판</td>
-            <td><button on:click={() => deleteRow(row["순서"])}>X</button></td>
-        </tr>
-        {/each}
-        <tr>
-            <td>총합</td>
-            <td>{tableSumData["명성"]}</td>
-            <td>{tableSumData["흉몽"]}</td>
-            <td>{tableSumData["여신전"]}</td>
-            <td>{tableSumData["매칭여신전"]}</td>
-            <td>{tableSumData["애쥬어"]}</td>
-            <td>{tableSumData["매칭애쥬어"]}</td>
-            <td>{tableSumData["달잠호"]}</td>
-            <td>{tableSumData["매칭달잠호"]}</td>
-            <td>{tableSumData["계곡"]}</td>
-            <td>{tableSumData["꿈솔"]}</td>
-            <td>{tableSumData["안개신"]}</td>
-            <td>{tableSumData["싱글나벨"]}</td>
-            <td>{tableSumData["매칭나벨"]}</td>
-            <td>{tableSumData["레이드나벨"]}</td>
-            <td>{tableSumData["베누스1단"]}</td>
-            <td>{tableSumData["베누스2단"]}</td>
-            <td>{tableSumData["패스지정"]}</td>
-            <td></td>
-            <td>{tableSumData["종말의계시"]}{#if tableSumData["종말의계시"] != null}개{/if}</td>
-            <td>{tableSumData["헬배율"]}{#if tableSumData["헬배율"] != null}판{/if}</td>
-            <td>{tableSumData["헬"]}{#if tableSumData["헬"] != null}판{/if}</td>
-            <td></td>
-        </tr>
-    </tbody>
-</table>
+</div>
