@@ -267,7 +267,7 @@
 
 <div class="bg-gray-100 text-gray-800 min-h-screen p-4 sm:p-6 lg:p-8">
     <div class="max-w-full mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-center text-cyan-600">주간 종말의 계시 계산기</h1>
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">주간 종말의 계시 계산기</h1>
 
         <div class="bg-white p-4 rounded-lg mb-6 shadow-md">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
@@ -290,7 +290,7 @@
                     <input id="char-name" type="text" bind:value={name} on:keydown={checkKeydownEnter} placeholder="캐릭터 이름 입력" class="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                 </div>
                 <div class="flex flex-col sm:col-span-2 md:col-span-1">
-                     <button on:click={searchCharacter} class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">검색</button>
+                    <button on:click={searchCharacter} class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">검색</button>
                 </div>
                 <div class="flex flex-col sm:col-span-2 md:col-span-1">
                     <button on:click={addRow} class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">현재 캐릭터 추가</button>
@@ -381,7 +381,7 @@
                     </tr>
                     {/each}
                 </tbody>
-                 <tfoot class="bg-gray-100 font-medium">
+                <tfoot class="bg-gray-100 font-medium">
                     <tr class="text-gray-800">
                         <td class="p-2 border-r border-gray-200">총합</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["명성"] || 'N/A'}</td>
