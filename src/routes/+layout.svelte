@@ -2,7 +2,7 @@
     import '../app.css';
     import { page } from '$app/stores';
 </script>
-
+<title>DNF Spear</title>
 <div class="min-h-screen bg-gray-100">
     <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
