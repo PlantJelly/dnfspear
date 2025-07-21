@@ -27,7 +27,6 @@ const equipmentInf = {
     태초융합석: [29952, 395],
 };
 
-/** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
     let valueToggle = url.searchParams.get('toggle'); 
     let itemResult = await auctionAverage(itemIdJson); 

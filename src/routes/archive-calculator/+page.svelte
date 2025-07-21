@@ -5,6 +5,7 @@ import { onMount } from 'svelte';
 let apiResult = {};
 let errorMsg = '';
 let isPowerOfEssence = false;
+let isLoading = false;
 
 const equipmentParts = [
     { id: '상의', name: '상의', images: ['coat1.png', 'coat2.png', 'coat3.png'] },
@@ -28,6 +29,7 @@ onMount(() => {
 });
 
 async function fetchData() {
+  isLoading = true;
   const toggle = isPowerOfEssence ? '힘의 정수' : '종말의 계시';
   const now = Date.now();
   const cached = cachedResults[toggle];
@@ -35,6 +37,7 @@ async function fetchData() {
   if (cached && (now - cached.timestamp < CACHE_DURATION)) {
     apiResult = cached.data;
     errorMsg = '';
+    isLoading = false;
     return; 
   }
 
@@ -47,7 +50,6 @@ async function fetchData() {
     } else {
     const newData = await res.json();
     apiResult = newData;
-    // 새로운 데이터와 타임스탬프를 캐시에 저장
     cachedResults[toggle] = {
       data: newData,
       timestamp: Date.now()
@@ -56,6 +58,8 @@ async function fetchData() {
   } catch (e) {
     errorMsg = '서버 요청 중 오류 발생';
     apiResult = {};
+  } finally {
+    isLoading = false;
   }
 }
 
@@ -92,7 +96,9 @@ function handleToggle() {
           </div>
           
           <div class="text-center mt-2">
-            {#if apiResult[part.id] !== undefined && apiResult[part.id] !== null}
+            {#if isLoading}
+              <p class="text-lg font-bold text-gray-500 mb-1">갱신중...</p>
+            {:else if apiResult[part.id] !== undefined && apiResult[part.id] !== null}
               <p class="text-lg font-bold text-gray-800 mb-1">{apiResult[part.id]}</p>
               {#if part.id === '레전밀봉'}
                 {#if apiResult[part.id] > 0}

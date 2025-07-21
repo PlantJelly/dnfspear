@@ -384,7 +384,7 @@
                 <tfoot class="bg-gray-100 font-medium">
                     <tr class="text-gray-800">
                         <td class="p-2 border-r border-gray-200">총합</td>
-                        <td class="p-2 border-r border-gray-200">{tableSumData["명성"] || 'N/A'}</td>
+                        <td class="p-2 border-r border-gray-200">{tableSumData["명성"] || ''}</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["흉몽"] || 0}</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["여신전"] || 0}</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["매칭여신전"] || 0}</td>
@@ -400,7 +400,7 @@
                         <td class="p-2 border-r border-gray-200">{tableSumData["레이드나벨"] || 0}</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["베누스1단"] || 0}</td>
                         <td class="p-2 border-r border-gray-200">{tableSumData["베누스2단"] || 0}</td>
-                        <td class="p-2 border-r border-gray-200">{tableSumData["패스지정"] || 0}</td>
+                        <td class="p-2 border-r border-gray-200"></td>
                         <td class="p-2 border-r border-gray-200"></td>
                         <td class="p-2 border-r border-gray-200 whitespace-nowrap">{tableSumData["종말의계시"] || 0}개</td>
                         <td class="p-2 border-r border-gray-200 whitespace-nowrap">{tableSumData["헬배율"] || 0}판</td>
