@@ -6,13 +6,14 @@
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
+        "start": "node build",
         "preview": "vite preview",
         "prepare": "svelte-kit sync || echo ''",
         "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
     },
     "devDependencies": {
-        "@sveltejs/adapter-auto": "^6.0.0",
+        "@sveltejs/adapter-node": "^5.2.13",
         "@sveltejs/kit": "^2.16.0",
         "@sveltejs/vite-plugin-svelte": "^5.0.0",
         "@tailwindcss/vite": "^4.1.11",
@@ -26,5 +27,8 @@
     "dependencies": {
         "dotenv": "^16.5.0",
         "js-cookie": "^3.0.5"
+    },
+    "engines": {
+        "node": ">=18"
     }
 }
