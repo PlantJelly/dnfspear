@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 dotenv.config();
 
-console.log(process.env.PORT);
+
 
 export default defineConfig({
     plugins: [sveltekit(), devtoolsJson(), tailwindcss()],

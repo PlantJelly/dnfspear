@@ -30,4 +30,11 @@
     <main>
         <slot />
     </main>
+
+<footer>
+    <a href="http://developers.neople.co.kr" target="_blank" class="flex justify-center">
+    <img src="neopleBrandIdentity.png" alt="Neople 오픈 API">
+    </a>
+    <p class="flex justify-center">©DNFSpear. All Rights Reserved.</p>
+</footer>
 </div>
