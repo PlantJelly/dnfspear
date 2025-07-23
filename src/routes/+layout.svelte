@@ -31,10 +31,13 @@
         <slot />
     </main>
 
-<footer>
-    <a href="http://developers.neople.co.kr" target="_blank" class="flex justify-center">
-    <img src="neopleBrandIdentity.png" alt="Neople 오픈 API">
+<footer class="flex flex-col items-center py-4 space-y-2">
+    <a href="http://developers.neople.co.kr" target="_blank">
+    <img src="/neopleBrandIdentity.png" alt="Neople 오픈 API">
     </a>
-    <p class="flex justify-center">©DNFSpear. All Rights Reserved.</p>
+    <a href="https://open.kakao.com/o/slgSXyIh" target="_blank">
+    <img src="/kakaotalk.png" alt="오픈채팅" class="w-10">
+    </a>
+    <p>©DNFSpear. All Rights Reserved.</p>
 </footer>
 </div>
