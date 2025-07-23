@@ -22,15 +22,13 @@
     여신전 : [120, 11],
     흉몽 : [140, 12]
     };
-    let apiResult = {
-        이름 : "",
-        명성 : 0,
-        ID : ""
-    };
+    let apiResult = null;
     let tableData = [
     ];
     let tableSumData = {
     };
+    let errorMessage = "";
+    let loading = false;
     
     onMount(() => {
         const savedData = Cookie.get('adventureData');
@@ -50,7 +48,7 @@
     });
 
     function addRow() {
-        if (!apiResult["이름"]) {
+        if (!apiResult || !apiResult["이름"]) {
             window.alert("먼저 캐릭터를 검색해주세요.");
             return;
         }
@@ -81,9 +79,7 @@
         };
         tableData = [...tableData, newRow];
         updateTableData(tableData.length - 1, true);
-        apiResult["이름"] = "";
-        apiResult["명성"] = 0;
-        apiResult["ID"] = "";
+        apiResult = null;
         id += 1;
     }
     async function searchCharacter() {
@@ -95,9 +91,27 @@
             window.alert("서버를 입력해주세요")
             return;
         }
-        let type = "캐릭터검색";
-        const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
-        apiResult = await res.json();
+        
+        loading = true;
+        errorMessage = "";
+        apiResult = null;
+        
+        try {
+            let type = "캐릭터검색";
+            const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
+            
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || '알 수 없는 오류가 발생했습니다.');
+            }
+            
+            apiResult = await res.json();
+
+        } catch (err) {
+            errorMessage = err.message;
+        } finally {
+            loading = false;
+        }
     }
     function doomOracleCalculator(row) {
         let doomOracle = 0;
@@ -290,15 +304,24 @@
                     <input id="char-name" type="text" bind:value={name} on:keydown={checkKeydownEnter} placeholder="캐릭터 이름 입력" class="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                 </div>
                 <div class="flex flex-col sm:col-span-2 md:col-span-1">
-                    <button on:click={searchCharacter} class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">검색</button>
+                    <button on:click={searchCharacter} disabled={loading} class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 disabled:bg-gray-400">
+                        {#if loading}
+                            검색 중...
+                        {:else}
+                            검색
+                        {/if}
+                    </button>
                 </div>
                 <div class="flex flex-col sm:col-span-2 md:col-span-1">
                     <button on:click={addRow} class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">현재 캐릭터 추가</button>
                 </div>
             </div>
+            {#if errorMessage}
+                <p class="mt-4 text-center text-red-500 font-medium">{errorMessage}</p>
+            {/if}
         </div>
 
-        {#if apiResult["이름"] != ""}
+        {#if apiResult && apiResult["이름"]}
             <div class="bg-white p-4 rounded-lg mb-6 flex items-center space-x-4 shadow-md">
                 <img src="https://img-api.neople.co.kr/df/servers/{server}/characters/{apiResult["ID"]}?zoom=1" alt="캐릭터 사진" class="w-24 h-24 rounded-md border-2 border-gray-200">
                 <div>

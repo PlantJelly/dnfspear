@@ -1,6 +1,9 @@
-// @ts-nocheck
 import { error } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
+
+let cachedApiData = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5분
 
 const itemIdJson = {
     무색큐브조각: "785e56a0ed4e3efd573da1f56a45217d",
@@ -27,88 +30,105 @@ const equipmentInf = {
     태초융합석: [29952, 395],
 };
 
-export async function GET({ url }) {
-    let valueToggle = url.searchParams.get('toggle'); 
-    let itemResult = await auctionAverage(itemIdJson); 
-    let itemApoResult = await apoResult(itemIdApoJson); 
-
-    async function auctionSearch(itemId) {
+async function auctionSearch(itemId) {
+    try {
         let apiKey = env.API_KEY; 
         let limit = 50; 
         let dnfApiUrl = `https://api.neople.co.kr/df/auction-sold?limit=${limit}&itemId=${itemId}&apikey=${apiKey}`;
         const fetched = await fetch(dnfApiUrl); 
+
+        if (!fetched.ok) {
+            throw error(fetched.status, `API 요청 실패: ${fetched.statusText}`);
+        }
+
         const data = await fetched.json(); 
+
+        if (!data.rows || data.rows.length === 0) {
+            return { rows: [] }; 
+        }
+
         return data;
-    }
-
-    async function auctionAverage(itemIdJson) {
-        let itemResult = {};
-        for (const [key, itemId] of Object.entries(itemIdJson)) {
-            let data = await auctionSearch(itemId); 
-            let sum = sumAverage(data); 
-            itemResult[key] = sum;
+    } catch (err) {
+        if (err.status) {
+            throw err;
         }
-        return itemResult;
+        throw error(500, `서버 오류가 발생했습니다: ${err.message}`);
+    }
+}
+
+function sumAverage(data) {
+    if (!data.rows || data.rows.length === 0) return 0;
+    let sum = 0;
+    for (let i = 0; i < data.rows.length; i++) {
+        sum += data.rows[i].unitPrice;
+    }
+    sum = sum / data.rows.length; 
+    sum = Math.floor(sum); 
+    return sum;
+}
+
+async function fetchAndCacheApiData() {
+    const now = Date.now();
+    if (cachedApiData && (now - lastFetchTime < CACHE_DURATION)) {
+        return cachedApiData;
     }
 
-    async function apoResult(itemIdApoJson) {
-        let result = -1;
-        for (const [key, itemId] of Object.entries(itemIdApoJson)) {
-            let data = await auctionSearch(itemId);
-            let value = sumAverage(data);
-            let cal = -1;
-            switch (key) {
-                case "레어소울결정":
-                    cal = value / 2;
-                    break;
-                case "유니크소울결정":
-                    cal = value / 4;
-                    break;
-                case "레전더리소울결정":
-                    cal = value / 30;
-                    break;
-                case "에픽소울결정":
-                    cal = value / 90;
-                    break;
-                case "태초소울결정":
-                    cal = value / 1000;
-                    break;
-            }
-            if (result > cal || result == -1) {
-                result = cal;
-            }
+    let itemResult = {};
+    for (const [key, itemId] of Object.entries(itemIdJson)) {
+        let data = await auctionSearch(itemId); 
+        itemResult[key] = sumAverage(data);
+    }
+
+    let itemApoResult = -1;
+    for (const [key, itemId] of Object.entries(itemIdApoJson)) {
+        let data = await auctionSearch(itemId);
+        let value = sumAverage(data);
+        if (value === 0) continue;
+
+        let cal = -1;
+        switch (key) {
+            case "레어소울결정": cal = value / 2; break;
+            case "유니크소울결정": cal = value / 4; break;
+            case "레전더리소울결정": cal = value / 30; break;
+            case "에픽소울결정": cal = value / 90; break;
+            case "태초소울결정": cal = value / 1000; break;
         }
-        return result; 
-    }
-
-    function sumAverage(data) {
-        let sum = 0;
-        for (let i = 0; i < data.rows.length; i++) {
-            sum += data.rows[i].unitPrice;
+        if (itemApoResult === -1 || cal < itemApoResult) {
+            itemApoResult = cal;
         }
-        sum = sum / data.rows.length; 
-        sum = Math.floor(sum); 
-        return sum;
     }
+    
+    cachedApiData = { itemResult, itemApoResult };
+    lastFetchTime = now;
 
-    function equipmentCal() {
-        let equipmentResult = {};
-        for (const [name, value] of Object.entries(equipmentInf)) {
-            let cal = 0;
-            if (name.indexOf("융합석") == -1) {
-                cal = value[0] + 2228 - (value[1] + 29) * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
-            } else if (name.indexOf("레전") == 0) {
-                cal = value[0] + itemResult["황금큐브조각"] * 0.97 - 500 - value[1] * itemResult["무색큐브조각"] * 0.97 - (itemResult["힘의정수1개상자"] * 0.97) / 3;
-            } else if (name.indexOf("에픽") == 0) {
-                cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
-            } else if (name.indexOf("태초") == 0) {
-                cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97;
-            }
-            equipmentResult[name] = Math.floor(cal); 
+    return cachedApiData;
+}
+
+function calculateEquipment(itemResult, itemApoResult, valueToggle) {
+    let equipmentResult = {};
+    for (const [name, value] of Object.entries(equipmentInf)) {
+        let cal = 0;
+        if (name.indexOf("융합석") == -1) {
+            cal = value[0] + 2228 - (value[1] + 29) * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
+        } else if (name.indexOf("레전") == 0) {
+            cal = value[0] + itemResult["황금큐브조각"] * 0.97 - 500 - value[1] * itemResult["무색큐브조각"] * 0.97 - (itemResult["힘의정수1개상자"] * 0.97) / 3;
+        } else if (name.indexOf("에픽") == 0) {
+            cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
+        } else if (name.indexOf("태초") == 0) {
+            cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97;
         }
-        equipmentResult["레전밀봉"] = equipmentResult["레전융합석"] * 36 + equipmentInf["레전융합석"][0]; 
-        return equipmentResult;
+        equipmentResult[name] = Math.floor(cal); 
     }
+    equipmentResult["레전밀봉"] = equipmentResult["레전융합석"] * 36 + equipmentInf["레전융합석"][0]; 
+    return equipmentResult;
+}
 
-    return new Response(String(JSON.stringify(equipmentCal())));
+export async function GET({ url }) {
+    let valueToggle = url.searchParams.get('toggle'); 
+    
+    const { itemResult, itemApoResult } = await fetchAndCacheApiData();
+    
+    const finalResult = calculateEquipment(itemResult, itemApoResult, valueToggle);
+
+    return new Response(JSON.stringify(finalResult));
 }
