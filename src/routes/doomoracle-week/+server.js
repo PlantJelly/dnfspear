@@ -14,7 +14,7 @@ export async function GET({url}){
     async function searchChracter(funServer, funName) {
         try {
             let apiKey = env.API_KEY;
-            let dnfApiUrl = `https://api.neople.co.kr/df/servers/${funServer}/characters?characterName=${funName}&apikey=${apiKey}`
+            let dnfApiUrl = `https://api.neople.co.kr/df/servers/${funServer}/characters?characterName=${encodeURIComponent(funName)}&apikey=${apiKey}`
             const fetched = await fetch(dnfApiUrl);
 
             if (!fetched.ok) {

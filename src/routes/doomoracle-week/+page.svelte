@@ -98,7 +98,7 @@
         
         try {
             let type = "캐릭터검색";
-            const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${name}`);
+            const res = await fetch(`/doomoracle-week?type=${type}&server=${server}&name=${encodeURIComponent(name)}`);
             
             if (!res.ok) {
                 const errorData = await res.json();
