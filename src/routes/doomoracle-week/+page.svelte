@@ -138,6 +138,12 @@
                         ((cell == "달잠호" || cell == "매칭달잠호") && (row["달잠호"] && row["매칭달잠호"] == true))){
                     return [doomOracle, hell, "matching"];
                 }
+                else if((cell == "베누스1단" || cell == "베누스2단") && (row["베누스1단"] && row["베누스2단"] == true)){
+                    return [doomOracle, hell, "legion"];
+                }
+                else if((cell == "싱글나벨" || cell == "매칭나벨" || cell == "레이드나벨") && ((row["싱글나벨"] && row["매칭나벨"] == true) || (row["매칭나벨"] && row["레이드나벨"] == true) || (row["싱글나벨"] && row["레이드나벨"] == true))){
+                    return [doomOracle, hell, "raid"];
+                }
                 doomOracle += dungeonResult[cell][0];
                 hell += dungeonResult[cell][1];
             }
@@ -156,9 +162,69 @@
             window.alert("방금 체크한값은 주간보상횟수를 초과했습니다.");
             return;
         }
+        else if (checkValue[2] == "legion"){
+            switch (check){
+                case "베누스1단":
+                    tableData[idx]["베누스1단"] = true;
+                    tableData[idx]["베누스2단"] = false;
+                    break;
+                case "베누스2단":
+                    tableData[idx]["베누스2단"] = true;
+                    tableData[idx]["베누스1단"] = false;
+                    break;
+            }
+            updateTableData(idx, check);
+            return;
+        }
+        else if (checkValue[2] == "raid"){
+            switch (check){
+                case "싱글나벨":
+                    tableData[idx]["싱글나벨"] = true;
+                    tableData[idx]["레이드나벨"] = false;
+                    tableData[idx]["매칭나벨"] = false;
+                    break;
+                case "매칭나벨":
+                    tableData[idx]["매칭나벨"] = true;
+                    tableData[idx]["싱글나벨"] = false;
+                    tableData[idx]["레이드나벨"] = false;
+                    break;
+                case "레이드나벨":
+                    tableData[idx]["레이드나벨"] = true;
+                    tableData[idx]["싱글나벨"] = false;
+                    tableData[idx]["매칭나벨"] = false;
+                    break;
+            }
+            updateTableData(idx, check);
+            return;
+        }
         else if (checkValue[2] == "matching"){
-            tableData[idx][check] = false;
-            window.alert("방금 체크한값은 일반과 매칭을 동시에 체크했습니다.");
+            switch (check){
+                case "여신전":
+                    tableData[idx]["여신전"] = true;
+                    tableData[idx]["매칭여신전"] = false;
+                    break;
+                case "매칭여신전":
+                    tableData[idx]["매칭여신전"] = true;
+                    tableData[idx]["여신전"] = false;
+                    break;
+                case "애쥬어":
+                    tableData[idx]["애쥬어"] = true;
+                    tableData[idx]["매칭애쥬어"] = false;
+                    break;
+                case "매칭애쥬어":
+                    tableData[idx]["매칭애쥬어"] = true;
+                    tableData[idx]["애쥬어"] = false;
+                    break;
+                case "달잠호":
+                    tableData[idx]["달잠호"] = true;
+                    tableData[idx]["매칭달잠호"] = false;
+                    break;
+                case "매칭달잠호":
+                    tableData[idx]["매칭달잠호"] = true;
+                    tableData[idx]["달잠호"] = false;
+                    break;
+                }
+            updateTableData(idx, check);
             return;
         }
         tableData[idx]["종말의계시"] = checkValue[0];
