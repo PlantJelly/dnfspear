@@ -3,7 +3,8 @@ import { env } from "$env/dynamic/private";
 
 let cachedApiData = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5분
+const CACHE_DURATION = 5 * 60 * 1000;
+let disassemblerPrice = 500;
 
 const itemIdJson = {
     무색큐브조각: "785e56a0ed4e3efd573da1f56a45217d",
@@ -109,13 +110,13 @@ function calculateEquipment(itemResult, itemApoResult, valueToggle) {
     for (const [name, value] of Object.entries(equipmentInf)) {
         let cal = 0;
         if (name.indexOf("융합석") == -1) {
-            cal = value[0] + 2228 - (value[1] + 29) * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
+            cal = value[0] + 2228 - (value[1] + 29) * (itemResult["무색큐브조각"] * 0.97) - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
         } else if (name.indexOf("레전") == 0) {
-            cal = value[0] + itemResult["황금큐브조각"] * 0.97 - 500 - value[1] * itemResult["무색큐브조각"] * 0.97 - (itemResult["힘의정수1개상자"] * 0.97) / 3;
+            cal = value[0] - (itemResult["황금큐브조각"] * 0.97) + disassemblerPrice - value[1] * (itemResult["무색큐브조각"] * 0.97) - ((itemResult["힘의정수1개상자"] * 0.97) / 3);
         } else if (name.indexOf("에픽") == 0) {
-            cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97 - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
+            cal = value[0] - value[1] * (itemResult["무색큐브조각"] * 0.97) - (valueToggle == "힘의 정수" ? itemResult["힘의정수1개상자"] * 0.97 : itemApoResult);
         } else if (name.indexOf("태초") == 0) {
-            cal = value[0] - value[1] * itemResult["무색큐브조각"] * 0.97;
+            cal = value[0] - value[1] * (itemResult["무색큐브조각"] * 0.97);
         }
         equipmentResult[name] = Math.floor(cal); 
     }
@@ -125,6 +126,7 @@ function calculateEquipment(itemResult, itemApoResult, valueToggle) {
 
 export async function GET({ url }) {
     let valueToggle = url.searchParams.get('toggle'); 
+    disassemblerPrice = Number(url.searchParams.get('disassemblerPrice'));
     
     const { itemResult, itemApoResult } = await fetchAndCacheApiData();
     

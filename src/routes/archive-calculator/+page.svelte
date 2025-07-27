@@ -6,6 +6,7 @@ let apiResult = {};
 let errorMsg = '';
 let isPowerOfEssence = false;
 let isLoading = false;
+let disassemblerPrice = 500;
 
 const equipmentParts = [
     { id: '상의', name: '상의', images: ['coat1.png', 'coat2.png', 'coat3.png'] },
@@ -28,13 +29,13 @@ onMount(() => {
     fetchData();
 });
 
-async function fetchData() {
+async function fetchData(fetchType) {
   isLoading = true;
   const toggle = isPowerOfEssence ? '힘의 정수' : '종말의 계시';
   const now = Date.now();
   const cached = cachedResults[toggle];
 
-  if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+  if ((cached && (now - cached.timestamp < CACHE_DURATION)) && fetchType != "refresh") {
     apiResult = cached.data;
     errorMsg = '';
     isLoading = false;
@@ -43,7 +44,7 @@ async function fetchData() {
 
   errorMsg = '';
   try {
-    const res = await fetch(`/archive-calculator?toggle=${toggle}`);
+    const res = await fetch(`/archive-calculator?toggle=${toggle}&disassemblerPrice=${disassemblerPrice}`);
     if (!res.ok) {
       errorMsg = await res.text();
       apiResult = {};
@@ -73,14 +74,37 @@ function handleToggle() {
   <div class="max-w-7xl mx-auto">
     <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">기록실 효율 계산기</h1>
 
-    <div class="flex items-center justify-center mb-8">
-      <span class="mr-3 text-lg font-medium text-gray-900">종말의 계시</span>
-      <label for="toggle" class="inline-flex relative items-center cursor-pointer">
-        <input type="checkbox" id="toggle" class="sr-only peer" checked={isPowerOfEssence} on:change={handleToggle}>
-        <div class="w-14 h-8 bg-gray-300 rounded-full peer peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 transition-colors"></div>
-        <div class="absolute top-1 left-1 bg-white border-gray-300 border rounded-full h-6 w-6 transition-transform peer-checked:translate-x-full"></div>
-      </label>
-      <span class="ml-3 text-lg font-medium text-gray-900">힘의 정수</span>
+    <div class="flex items-center justify-between mb-8">
+      <div class="w-40"></div>
+
+      <div class="flex items-center justify-center">
+        <span class="mr-3 text-lg font-medium text-gray-900">종말의 계시</span>
+        <label for="toggle" class="inline-flex relative items-center cursor-pointer">
+          <input type="checkbox" id="toggle" class="sr-only peer" checked={isPowerOfEssence} on:change={handleToggle}>
+          <div class="w-14 h-8 bg-gray-300 rounded-full peer peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 transition-colors"></div>
+          <div class="absolute top-1 left-1 bg-white border-gray-300 border rounded-full h-6 w-6 transition-transform peer-checked:translate-x-full"></div>
+        </label>
+        <span class="ml-3 text-lg font-medium text-gray-900">힘의 정수</span>
+      </div>
+
+      <div class="w-40 flex items-end justify-end space-x-2">
+        <div>
+          <label for="disassembler-price" class="block text-right text-sm font-medium text-gray-700">해체기 비용</label>
+          <input
+            type="number"
+            id="disassembler-price"
+            bind:value={disassemblerPrice}
+            class="w-20 p-1 border border-gray-300 rounded-md shadow-sm text-center focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
+          />
+        </div>
+        <button 
+          on:click={() => fetchData("refresh")}
+          class="p-2 bg-cyan-500 text-white rounded-md shadow-sm hover:bg-cyan-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400"
+          aria-label="데이터 갱신"
+        >
+        <img src="refreshButton.png" alt="갱신" class="w-5">
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
