@@ -1,11 +1,13 @@
 <script>
 // @ts-nocheck
-import { onMount } from 'svelte';
+import { onMount, tick } from 'svelte';
 
 let apiResult = {};
 let errorMsg = '';
 let isPowerOfEssence = false;
 let isLoading = false;
+let selectedPart = null;
+let dialogElement;
 let disassemblerPrice = 500;
 
 const equipmentParts = [
@@ -28,6 +30,12 @@ let cachedResults = {};
 onMount(() => {
     fetchData();
 });
+
+$: if (selectedPart && dialogElement) {
+  tick().then(() => {
+    dialogElement.focus();
+  });
+}
 
 async function fetchData(fetchType) {
   isLoading = true;
@@ -68,7 +76,15 @@ function handleToggle() {
   isPowerOfEssence = !isPowerOfEssence;
   fetchData();
 }
+
+function handleKeydown(event) {
+  if (selectedPart && event.key === 'Escape') {
+    selectedPart = null;
+  }
+}
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
@@ -109,7 +125,13 @@ function handleToggle() {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {#each equipmentParts as part (part.id)}
-        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between transition-transform hover:scale-105">
+        <div 
+          class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between transition-transform hover:scale-105 cursor-pointer"
+          on:click={() => selectedPart = part}
+          role="button"
+          tabindex="0"
+          on:keydown={(e) => e.key === 'Enter' && (selectedPart = part)}
+        >
           <div>
             <h2 class="text-xl font-semibold text-center mb-3 text-gray-700">{part.name}</h2>
             <div class="flex justify-center items-center space-x-2 mb-3 h-12">
@@ -142,6 +164,50 @@ function handleToggle() {
         </div>
       {/each}
     </div>
+
+    {#if selectedPart}
+      <div 
+        bind:this={dialogElement}
+        tabindex="-1" 
+        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50 outline-none" 
+        on:click|self={() => selectedPart = null} 
+        on:keydown={handleKeydown}
+        role="dialog" 
+        aria-modal="true"
+      >
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative mx-4">
+          <button on:click={() => selectedPart = null} class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close modal">&times;</button>
+          <h2 class="text-2xl font-bold text-center mb-4 text-gray-800">{selectedPart.name}</h2>
+          <div class="flex justify-center items-center space-x-2 mb-4">
+            {#each selectedPart.images as image}
+              <img src={`/archive-calculator/${image}`} alt={selectedPart.name} class="h-12 w-12 object-contain">
+            {/each}
+          </div>
+          <div class="text-center">
+            {#if isLoading}
+              <p class="text-xl font-bold text-gray-500">갱신중...</p>
+            {:else if apiResult[selectedPart.id] !== undefined && apiResult[selectedPart.id] !== null}
+              <p class="text-2xl font-bold text-gray-800 mb-2">{apiResult[selectedPart.id]}</p>
+              {#if selectedPart.id === '레전밀봉'}
+                {#if apiResult[selectedPart.id] > 0}
+                  <p class="text-md font-medium text-green-600">이상 판매해야 이득</p>
+                {/if}
+              {:else}
+                {#if apiResult[selectedPart.id] > 0}
+                  <p class="text-md font-medium text-blue-600">판매가 이득</p>
+                {:else if apiResult[selectedPart.id] < 0}
+                  <p class="text-md font-medium text-red-600">해체가 이득</p>
+                {:else}
+                  <p class="text-md font-medium text-gray-500">동일</p>
+                {/if}
+              {/if}
+            {:else}
+              <p class="text-lg text-gray-500">데이터가 없습니다.</p>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
 
     {#if errorMsg}
       <p class="text-center text-red-600 mt-8 font-semibold">{errorMsg}</p>
